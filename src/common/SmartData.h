@@ -3,13 +3,11 @@
 #include <map>
 #include <QString>
 
-typedef unsigned char SmartAttribute;
-
 class SmartData
 {
-private:
 
-    enum SmartAttributeType : unsigned char
+public:
+    enum SmartAttribute
     {
         ReadErrorRate = 0x01,
         ThroughputPerformance = 0x02,
@@ -74,10 +72,6 @@ private:
         FreeFallProtection = 0xFE,
     };
 
-    static const std::map<SmartAttribute, QString> dictionary;
-
-public:
-
     struct AttrData
     {
         int value; 
@@ -91,16 +85,5 @@ public:
 
     auto operator<=>(const SmartData &) const = default;
 
-    static QString GetAttrTypeName(const SmartAttribute& _uChar)
-    {
-        auto it = dictionary.find(_uChar);
-        if(it != dictionary.end())
-        {
-            return it->second;
-        }
-        else
-        {
-            return "Unknown Attribute";
-        }
-    }
+    static QString GetAttrTypeName(const SmartAttribute& _uChar);
 };

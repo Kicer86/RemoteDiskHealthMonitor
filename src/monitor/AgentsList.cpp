@@ -123,7 +123,7 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                     QString item;
 
                     auto data = sData.smartData;
-                        for (auto& i : data)
+                        for (const auto& i : data)
                         {
                             item += SmartData::GetAttrTypeName(i.first);
                             item += ",";
@@ -153,7 +153,7 @@ QHash<int, QByteArray> AgentsList::roleNames() const
     existingRoles.insert(AgentDetectionTypeRole, "agentDetectionType");
     existingRoles.insert(AgentDiskInfoNamesRole, "agentDiskInfoNames");
     existingRoles.insert(AgentDiskInfoDataRole, "agentDiskInfoData");
-    
+
 
     return existingRoles;
 }

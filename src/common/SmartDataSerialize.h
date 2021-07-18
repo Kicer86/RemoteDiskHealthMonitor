@@ -30,7 +30,7 @@ inline QDataStream& operator>>(QDataStream& _in, SmartData& _smartData)
 {
 	quint32 mapSize;
 	_in >> mapSize;
-	std::pair<unsigned char, SmartData::AttrData> tempPair;
+	std::pair<SmartData::SmartAttribute, SmartData::AttrData> tempPair;
 
 	while (mapSize--)
 	{

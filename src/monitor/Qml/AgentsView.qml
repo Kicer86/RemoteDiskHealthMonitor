@@ -146,10 +146,10 @@ Item {
                     TableModelColumn { display: "rawVal" }
 
                     rows: [{
-                            "attr": "Attribute Name",
-                            "value": "Value",
-                            "worst": "Worst",
-                            "rawVal": "Raw Value",
+                        attr: "Attribute Name",
+                        value: "Value",
+                        worst: "Worst",
+                        rawVal: "Raw Value",
                     }]
                 }
 

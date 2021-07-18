@@ -16,9 +16,9 @@ SmartData SmartReader::ReadSMARTData(const Disk &)
 
     qDebug() << output;
 
-    SmartCtlOutputParser::parse(output);
+    const auto entries = SmartCtlOutputParser::parse(output);
 
-    return SmartData();
+    return entries;
 }
 
 

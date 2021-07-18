@@ -5,9 +5,11 @@
 #include <QByteArray>
 #include <map>
 
+#include "common/SmartData.h"
+
 namespace SmartCtlOutputParser
 {
-    std::map<std::string, std::string> parse(const QByteArray &);
+    SmartData parse(const QByteArray &);
 };
 
 #endif

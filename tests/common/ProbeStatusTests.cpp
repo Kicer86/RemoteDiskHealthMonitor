@@ -32,8 +32,8 @@ TEST(ProbeStatusTest, serializationOfSmartRawData)
     status.health = GeneralHealth::BAD;
     status.rawData = SmartData{ .smartData =
         {
-            {1, {1,2,3}},
-            {4, {8,9,4}}
+            {SmartData::TotalLBAsWritten, {1,2,3}},
+            {SmartData::HighFlyWrites, {8,9,4}}
         }
     };
 

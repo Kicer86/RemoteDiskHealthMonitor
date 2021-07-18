@@ -28,10 +28,10 @@ bool WMICommunication::WMIInit(const WmiNamespace _namespace)
             -1,                          // COM authentication
             NULL,                        // Authentication services
             NULL,                        // Reserved
-            RPC_C_AUTHN_LEVEL_PKT,       // Default authentication 
-            RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation  
+            RPC_C_AUTHN_LEVEL_PKT,       // Default authentication
+            RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation
             NULL,                        // Authentication info
-            EOAC_NONE,                   // Additional capabilities 
+            EOAC_NONE,                   // Additional capabilities
             NULL                         // Reserved
         );
 
@@ -68,7 +68,7 @@ bool WMICommunication::WMIInit(const WmiNamespace _namespace)
             0,                       // Locale. NULL indicates current
             NULL,                    // Security flags.
             0,                       // Authority (for example, Kerberos)
-            0,                       // Context object 
+            0,                       // Context object
             &m_services                // pointer to IWbemServices proxy
         );
 
@@ -81,11 +81,11 @@ bool WMICommunication::WMIInit(const WmiNamespace _namespace)
             m_services,                    // Indicates the proxy to set
             RPC_C_AUTHN_WINNT,           // RPC_C_AUTHN_xxx
             RPC_C_AUTHZ_NONE,            // RPC_C_AUTHZ_xxx
-            NULL,                        // Server principal name 
-            RPC_C_AUTHN_LEVEL_CALL,      // RPC_C_AUTHN_LEVEL_xxx 
+            NULL,                        // Server principal name
+            RPC_C_AUTHN_LEVEL_CALL,      // RPC_C_AUTHN_LEVEL_xxx
             RPC_C_IMP_LEVEL_IMPERSONATE, // RPC_C_IMP_LEVEL_xxx
             NULL,                        // client identity
-            EOAC_NONE                    // proxy capabilities 
+            EOAC_NONE                    // proxy capabilities
         );
 
         if (FAILED(hres))
@@ -303,11 +303,14 @@ void WMICommunication::FeedSmartDataStructure(const std::vector<BYTE>& _data, co
             attrData.value = _data.at(i + 5);
             attrData.worst = _data.at(i + 6);
             attrData.rawVal = _data.at(i + 7);
-            m_smartData.smartData.insert(std::pair<unsigned char, SmartData::AttrData>(_data.at(i + 2), attrData));
+            m_smartData.smartData.insert(std::pair<SmartData::SmartAttribute, SmartData::AttrData>(
+                static_cast<SmartData::SmartAttribute>(_data.at(i + 2)),
+                attrData
+            ));
         }
-        
+
     }
-    
+
 }
 
 std::string WMICommunication::StringFromVariant(VARIANT& vt)

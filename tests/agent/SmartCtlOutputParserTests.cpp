@@ -106,23 +106,23 @@ TEST(SmartCtlOutputParserTest, fullOutput)
         )"
     );
 
-    EXPECT_THAT(result, UnorderedElementsAre(
-        std::pair<std::string, std::string>{"Calibration_Retry_Count", "0"  },
-        std::pair<std::string, std::string>{"Current_Pending_Sector", "0"   },
-        std::pair<std::string, std::string>{"Load_Cycle_Count", "1295"      },
-        std::pair<std::string, std::string>{"Multi_Zone_Error_Rate", "0"    },
-        std::pair<std::string, std::string>{"Offline_Uncorrectable", "0"    },
-        std::pair<std::string, std::string>{"Power-Off_Retract_Count", "30" },
-        std::pair<std::string, std::string>{"Power_Cycle_Count", "1138"     },
-        std::pair<std::string, std::string>{"Power_On_Hours", "12128"       },
-        std::pair<std::string, std::string>{"Raw_Read_Error_Rate", "0"      },
-        std::pair<std::string, std::string>{"Reallocated_Event_Count", "0"  },
-        std::pair<std::string, std::string>{"Reallocated_Sector_Ct", "0"    },
-        std::pair<std::string, std::string>{"Seek_Error_Rate", "0"          },
-        std::pair<std::string, std::string>{"Spin_Retry_Count", "0"         },
-        std::pair<std::string, std::string>{"Spin_Up_Time", "2408"          },
-        std::pair<std::string, std::string>{"Start_Stop_Count", "1140"      },
-        std::pair<std::string, std::string>{"Temperature_Celsius", "32"     },
-        std::pair<std::string, std::string>{"UDMA_CRC_Error_Count", "0"     }
+    EXPECT_THAT(result.smartData, UnorderedElementsAre(
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::ReadErrorRate,             SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::SpinUpTime,                SmartData::AttrData{171, 170, 2408 } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::StartStopCount,            SmartData::AttrData{ 99,  99, 1140 } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::ReallocatedSectorsCount,   SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::SeekErrorRate,             SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::PowerOnHoursPOH,           SmartData::AttrData{ 84,  84, 12128} },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::SpinRetryCount,            SmartData::AttrData{100, 100, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::CalibrationRetryCount,     SmartData::AttrData{100, 100, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::PowerCycleCount,           SmartData::AttrData{ 99,  99, 1138 } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::PoweroffRetractCount,      SmartData::AttrData{200, 200, 30   } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::LoadCycleCount,            SmartData::AttrData{200, 200, 1295 } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::Temperature,               SmartData::AttrData{111,  98, 32   } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::ReallocationEventCount,    SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::CurrentPendingSectorCount, SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::UncorrectableSectorCount,  SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::UltraDMACRCErrorCount,     SmartData::AttrData{200, 200, 0    } },
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::MultiZoneErrorRate,        SmartData::AttrData{200, 200, 0    } }
     ));
 }
