@@ -45,6 +45,8 @@ if(WIN32)
         REQUIRED
     )
 
+set_target_properties(agent PROPERTIES LINK_FLAGS " /MANIFESTUAC:\"level='requireAdministrator'\"")
+
     target_sources(agent
         PRIVATE
             windows/WinGeneralAnalyzer.h
