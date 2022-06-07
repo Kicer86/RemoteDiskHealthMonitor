@@ -140,6 +140,16 @@ Item {
                 visible: false
                 boundsMovement: Flickable.StopAtBounds
 
+                ScrollBar.vertical: ScrollBar {
+                    anchors.right: parent.right
+                    visible: listView.contentHeight > listView.height
+                }
+
+                ScrollBar.horizontal: ScrollBar {
+                    anchors.bottom: parent.bottom
+                    visible: listView.contentWidth > listView.width
+                }
+
                 model: TableModel {
                     TableModelColumn { display: "attr" }
                     TableModelColumn { display: "value" }
