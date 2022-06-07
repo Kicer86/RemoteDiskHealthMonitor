@@ -136,7 +136,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 columnSpacing: 1
                 rowSpacing: 1
-                clip: false
+                clip: true
                 visible: false
                 boundsMovement: Flickable.StopAtBounds
 
