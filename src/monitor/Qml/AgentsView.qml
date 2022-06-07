@@ -138,6 +138,7 @@ Item {
                 rowSpacing: 1
                 clip: false
                 visible: false
+                boundsMovement: Flickable.StopAtBounds
 
                 model: TableModel {
                     TableModelColumn { display: "attr" }
