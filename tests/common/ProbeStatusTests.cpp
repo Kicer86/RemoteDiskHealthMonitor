@@ -1,4 +1,6 @@
 
+#include <QIODevice>
+
 #include <gmock/gmock.h>
 
 #include "ProbeStatus.h"

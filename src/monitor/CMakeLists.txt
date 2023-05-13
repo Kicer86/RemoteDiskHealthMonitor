@@ -1,12 +1,10 @@
 
-find_package(Qt5 REQUIRED COMPONENTS Quick Gui Network RemoteObjects)
+find_package(Qt6 REQUIRED COMPONENTS Quick Gui Network RemoteObjects)
 
-qt5_add_resources(QML_RESOURCES
+qt6_add_resources(QML_RESOURCES
     Qml/resources.qrc
     images/images.qrc
 )
-
-qt5_generate_repc(REPC ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep REPLICA)
 
 add_executable(monitor
     AgentsList.cpp
@@ -24,8 +22,9 @@ add_executable(monitor
     ManualAgentsValidator.cpp
     ManualAgentsValidator.hpp
     ${QML_RESOURCES}
-    ${REPC}
 )
+
+qt_add_repc_replicas(monitor ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep)
 
 target_link_libraries(monitor
     PRIVATE

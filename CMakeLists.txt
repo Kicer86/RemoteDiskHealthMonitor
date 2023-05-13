@@ -1,7 +1,7 @@
 
 cmake_policy(SET CMP0048 NEW)
-project(RemoteDiscHealthMonitor)
 cmake_minimum_required(VERSION 3.16)
+project(RemoteDiscHealthMonitor)
 
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
