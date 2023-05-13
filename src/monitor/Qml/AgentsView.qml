@@ -110,6 +110,7 @@ Item {
 
                 onVisibleChanged: {
                     fillSmartTable(currentIndex)
+                    tableView.forceLayout()
                 }
 
                 onCurrentIndexChanged: {
@@ -122,13 +123,14 @@ Item {
                     })
 
                     fillSmartTable(currentIndex)
+                    tableView.forceLayout()
                 }
             }
 
             TableView {
                 id: tableView
-                width: 600
-                height: 300
+                //width: 600
+                //height: 300
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.rowSpan: 5
@@ -139,6 +141,12 @@ Item {
                 clip: true
                 visible: false
                 boundsMovement: Flickable.StopAtBounds
+
+                columnWidthProvider: columnWidthFun
+                rowHeightProvider: rowHeightFun
+
+                onWidthChanged: tableView.forceLayout();
+                onHeightChanged: tableView.forceLayout()
 
                 ScrollBar.vertical: ScrollBar {
                     anchors.right: parent.right
@@ -151,6 +159,7 @@ Item {
                 }
 
                 model: TableModel {
+                    id: tableModel
                     TableModelColumn { display: "attr" }
                     TableModelColumn { display: "value" }
                     TableModelColumn { display: "worst" }
@@ -165,12 +174,14 @@ Item {
                 }
 
                 delegate: Rectangle {
-                    implicitWidth: 150
-                    implicitHeight: 20
-                    border.width: 1
+                    id: delegateRectangle
+                    implicitWidth: 100
+                    //implicitHeight: 1
+                    border.width: 0.5
 
                     Text {
                         text: display
+                        //anchors.fill: parent
                         anchors.centerIn: parent
                     }
                 }
@@ -202,5 +213,38 @@ Item {
         }
     }
 
+
+    TextMetrics {
+        id: metrics
+    }
+
+
+    function rowHeightFun(row) {
+        var txt = tableModel.getRow(row).attr
+        metrics.text = txt
+        var textHeight = metrics.boundingRect.height
+
+        return textHeight + 4
+    }
+
+    function columnWidthFun(column) {
+        if (column === 0) {
+            var rows = tableView.model.rowCount()
+            var maxWidth = 0;
+
+            for(var i = 0; i < rows; i++) {
+                var txt = tableModel.getRow(row).attr
+                metrics.text = txt
+                var textWidth = metrics.boundingRect.width
+
+                if (textWidth > maxWidth)
+                    maxWidth = textWidth;
+            }
+
+            return maxWidth + 7;   // some margin
+        } else {
+            return 50;
+        }
+    }
 }
 
