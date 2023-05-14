@@ -1,4 +1,4 @@
-name: CMake
+name: Build
 
 on: [pull_request]
 
@@ -14,6 +14,7 @@ jobs:
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
 
@@ -24,14 +25,29 @@ jobs:
       shell: bash
       run: git submodule update --init --recursive
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v2
+    - name: Install Qt for Windows
+      uses: jurplel/install-qt-action@v3
+      if: runner.os == 'Windows'
       with:
-        version: 5.15.2
+        version: 6.4.*
+        modules: 'qtremoteobjects'
 
-    - name: Install avahi
+    - name: Install Linux dependencies
       if: runner.os == 'Linux'
-      run: sudo apt-get install libavahi-client-dev
+      run: |
+        sudo apt-get update &&  \
+        sudo apt-get install    \
+        libavahi-client-dev     \
+        qt6-base-dev            \
+        qt6-remoteobjects-dev   \
+        qt6-declarative-dev     \
+        libgl1-mesa-dev
+
+    - name: Install MacOS dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew install            \
+        qt6
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -48,8 +64,8 @@ jobs:
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
       env:
-        CC:   gcc-10
-        CXX:  g++-10
+        CC:   gcc
+        CXX:  g++
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
