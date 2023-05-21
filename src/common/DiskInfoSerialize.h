@@ -57,7 +57,6 @@ inline QDataStream& operator>>(QDataStream& _in, std::vector<DiskInfo>& _diskInf
 	_diskInfoVec.clear();
 	_in >> vecSize;
 	_diskInfoVec.reserve(vecSize);
-	DiskInfo tempVal;
 	while (vecSize--) {
         DiskInfo diskInfo;
 		_in >> diskInfo;
