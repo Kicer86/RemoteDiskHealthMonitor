@@ -6,7 +6,7 @@ DiskInfo::DiskInfo()
 {
 }
 
-DiskInfo::DiskInfo(QString _name, GeneralHealth::Health& _health, const std::vector<ProbeStatus>& _statuses)
+DiskInfo::DiskInfo(QString _name, const GeneralHealth::Health& _health, const std::vector<ProbeStatus>& _statuses)
     : m_name(_name), m_health(_health), m_statuses(_statuses)
 {
 }
