@@ -21,16 +21,16 @@ public:
     quint16 port() const;
 
     void setOverallStatus(GeneralHealth::Health overallStatus) override;
-    void setDiskInfoCollection(std::vector<DiskInfo> diskInfoCollection) override;
+    void setDiskInfoCollection(QByteArray diskInfoCollection) override;
     GeneralHealth::Health overallStatus() const override;
-    std::vector<DiskInfo> diskInfoCollection() const override;
+    QByteArray diskInfoCollection() const override;
     void refresh() override;
 
 private:
     void CollectInfoAboutDiscs();
 
     GeneralHealth::Health m_health;
-    std::vector<DiskInfo> m_diskInfoCollection;    
+    QByteArray m_diskInfoCollection;
 
     QRemoteObjectHost m_ROHost;
     QString m_ip;

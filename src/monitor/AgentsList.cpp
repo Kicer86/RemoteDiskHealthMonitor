@@ -3,6 +3,7 @@
 #include <iterator>
 #include <QDebug>
 
+#include "common/DiskInfoSerialize.h"
 #include "AgentsList.hpp"
 
 
@@ -174,12 +175,14 @@ void AgentsList::updateAgentHealth(const AgentInformation& info, const GeneralHe
     }
 }
 
-void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, const std::vector<DiskInfo>& _diskInfoCollection)
+void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, const QByteArray& _diskInfoBin)
 {
     auto it = std::find(m_agents.begin(), m_agents.end(), _info);
 
     if (it != m_agents.end())
     {
+        const std::vector<DiskInfo> _diskInfoCollection = byteArrayToDiskInfo(_diskInfoBin);
+
         m_diskInfoCollection[_info] = _diskInfoCollection;
 
         const int pos = std::distance(m_agents.begin(), it);

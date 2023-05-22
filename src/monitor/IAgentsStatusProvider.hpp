@@ -18,6 +18,6 @@ class IAgentsStatusProvider: public QObject
 
     signals:
         void statusChanged(const AgentInformation &, const GeneralHealth::Health &);
-        void diskCollectionChanged(const AgentInformation&, const std::vector<DiskInfo>&);
+        void diskCollectionChanged(const AgentInformation&, const QByteArray &);
 
 };

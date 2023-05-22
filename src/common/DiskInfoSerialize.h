@@ -64,3 +64,21 @@ inline QDataStream& operator>>(QDataStream& _in, std::vector<DiskInfo>& _diskInf
 	}
 	return _in;
 }
+
+inline QByteArray diskInfoToByteArray(const std::vector<DiskInfo>& disks)
+{
+	QByteArray ba;
+	QDataStream s(&ba, QDataStream::WriteOnly);
+	s << disks;
+
+	return ba;
+}
+
+inline std::vector<DiskInfo> byteArrayToDiskInfo(const QByteArray& ba)
+{
+	QDataStream s(ba);
+	std::vector<DiskInfo> disks;
+	s >> disks;
+
+	return disks;
+}
