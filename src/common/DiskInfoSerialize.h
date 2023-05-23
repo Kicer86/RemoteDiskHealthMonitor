@@ -57,11 +57,28 @@ inline QDataStream& operator>>(QDataStream& _in, std::vector<DiskInfo>& _diskInf
 	_diskInfoVec.clear();
 	_in >> vecSize;
 	_diskInfoVec.reserve(vecSize);
-	DiskInfo tempVal;
 	while (vecSize--) {
         DiskInfo diskInfo;
 		_in >> diskInfo;
 		_diskInfoVec.push_back(diskInfo);
 	}
 	return _in;
+}
+
+inline QByteArray diskInfoToByteArray(const std::vector<DiskInfo>& disks)
+{
+	QByteArray ba;
+	QDataStream s(&ba, QDataStream::WriteOnly);
+	s << disks;
+
+	return ba;
+}
+
+inline std::vector<DiskInfo> byteArrayToDiskInfo(const QByteArray& ba)
+{
+	QDataStream s(ba);
+	std::vector<DiskInfo> disks;
+	s >> disks;
+
+	return disks;
 }

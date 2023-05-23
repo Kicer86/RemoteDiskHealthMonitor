@@ -1,8 +1,9 @@
 
-find_package(Qt5 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_executable(commonTests
     ProbeStatusTests.cpp
+    SerializationTests.cpp
 )
 
 target_include_directories(commonTests
@@ -12,6 +13,7 @@ target_include_directories(commonTests
 )
 
 target_link_libraries(commonTests
+    common
     gmock_main
     Qt::Core
 )

@@ -71,7 +71,7 @@ void Server::setOverallStatus(GeneralHealth::Health overallStatus)
     emit overallStatusChanged(m_health);
 }
 
-void Server::setDiskInfoCollection(std::vector<DiskInfo> diskInfoCollection)
+void Server::setDiskInfoCollection(QByteArray diskInfoCollection)
 {
     m_diskInfoCollection = diskInfoCollection;
 
@@ -84,7 +84,7 @@ GeneralHealth::Health Server::overallStatus() const
     return m_health;
 }
 
-std::vector<DiskInfo> Server::diskInfoCollection() const
+QByteArray Server::diskInfoCollection() const
 {
     return m_diskInfoCollection;
 }
@@ -134,6 +134,6 @@ void Server::CollectInfoAboutDiscs()
     });
 
     setOverallStatus(calc.CalculateCumulativeStatus(diskStatuses));
-    setDiskInfoCollection(discInfoCollection);
+    setDiskInfoCollection(diskInfoToByteArray(discInfoCollection));
 }
 

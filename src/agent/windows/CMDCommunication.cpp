@@ -42,9 +42,12 @@ bool CMDCommunication::CompareDeviceIdWithInstanceName(const Disk& _disk, std::s
 std::string CMDCommunication::ExecuteDiscStatusCommand(const Disk& _disk) const
 {
     QProcess proc;
-    proc.start("wmic diskdrive get deviceid,status");
+    QString program = "wmic";
+    QStringList arguments;
+    arguments << "diskdrive" << "get" << "deviceid,status";
+    proc.start(program, arguments);
     proc.waitForFinished();
-    QString output = proc.readAllStandardOutput();
+    auto output = proc.readAllStandardOutput();
 
     std::string ret = output.toStdString();
     
@@ -58,7 +61,10 @@ std::string CMDCommunication::ExecuteDiscStatusCommand(const Disk& _disk) const
 std::string CMDCommunication::GetInstanceName(const Disk& _disk) const
 {
     QProcess proc;
-    proc.start("wmic diskdrive get DeviceID, PNPDeviceID");
+    QString program = "wmic";
+    QStringList arguments;
+    arguments << "diskdrive" << "get" << "DeviceID," << "PNPDeviceID";
+    proc.start(program, arguments);
     proc.waitForFinished();
     QString output = proc.readAllStandardOutput();
 

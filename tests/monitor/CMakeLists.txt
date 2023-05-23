@@ -1,5 +1,5 @@
 
-find_package(Qt5 REQUIRED COMPONENTS Core Network Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
 
 add_executable(monitorTests
     AgentsListTests.cpp

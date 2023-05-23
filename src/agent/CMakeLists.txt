@@ -1,7 +1,5 @@
 
-find_package(Qt5 5.15 REQUIRED COMPONENTS Core RemoteObjects)
-
-qt5_generate_repc(REPC ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep SOURCE)
+find_package(Qt6 REQUIRED COMPONENTS Core RemoteObjects)
 
 ADD_EXECUTABLE( agent
 				main.cpp
@@ -17,8 +15,9 @@ ADD_EXECUTABLE( agent
                 Disk.h
                 Disk.cpp
                 SystemUtilitiesFactory.h
-                ${REPC}
 )
+
+qt_add_repc_sources(agent ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep)
 
 target_include_directories(agent
     PRIVATE
