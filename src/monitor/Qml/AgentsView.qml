@@ -220,7 +220,7 @@ Item {
 
 
     function rowHeightFun(row) {
-        var txt = tableModel.getRow(row).attr
+        var txt = tableModel.rows[row].attr
         metrics.text = txt
         var textHeight = metrics.boundingRect.height
 
@@ -229,11 +229,12 @@ Item {
 
     function columnWidthFun(column) {
         if (column === 0) {
-            var rows = tableView.model.rowCount()
+            var rows = tableView.model.rowCount
             var maxWidth = 0;
 
             for(var i = 0; i < rows; i++) {
-                var txt = tableModel.getRow(row).attr
+                var modelObject = tableView.model.getRow(i)
+                var txt = modelObject.attr
                 metrics.text = txt
                 var textWidth = metrics.boundingRect.width
 
@@ -242,6 +243,7 @@ Item {
             }
 
             return maxWidth + 7;   // some margin
+
         } else {
             return 50;
         }
