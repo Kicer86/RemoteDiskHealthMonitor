@@ -245,7 +245,8 @@ Item {
             return maxWidth + 7;   // some margin
 
         } else {
-            return 50;
+            metrics.text = tableView.model.getRow(i).rawVal
+            return metrics.boundingRect.width + 7;
         }
     }
 }
