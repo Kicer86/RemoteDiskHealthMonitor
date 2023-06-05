@@ -133,7 +133,9 @@ void Server::CollectInfoAboutDiscs()
         return diskInfo.GetHealth();
     });
 
-    setOverallStatus(calc.CalculateCumulativeStatus(diskStatuses));
+    const auto cumulativeDiskStatus = calc.CalculateCumulativeStatus(diskStatuses);
+
+    setOverallStatus(cumulativeDiskStatus);
     setDiskInfoCollection(diskInfoToByteArray(discInfoCollection));
 }
 
