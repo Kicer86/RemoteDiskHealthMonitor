@@ -74,16 +74,22 @@ public:
 
     struct AttrData
     {
-        int value; 
-        int worst; 
+        int value;
+        int worst;
         int rawVal;
 
         auto operator<=>(const AttrData &) const = default;
     };
 
-    std::map<SmartAttribute, AttrData> smartData;
-
     auto operator<=>(const SmartData &) const = default;
 
+    void add(SmartAttribute, const AttrData &);
+    const std::map<SmartAttribute, AttrData>& data() const;
+
+    QString toJSon() const;
+
     static QString GetAttrTypeName(const SmartAttribute& _uChar);
+
+private:
+    std::map<SmartAttribute, AttrData> m_smartData;
 };

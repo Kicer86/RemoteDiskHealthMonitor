@@ -7,7 +7,7 @@
 struct ProbeStatus
 {
     GeneralHealth::Health health;
-    IProbe::RawData rawData;
+    QString jsonData;
 
     auto operator<=>(const ProbeStatus &) const = default;
 };

@@ -5,7 +5,8 @@
 #include <QByteArray>
 #include <map>
 
-#include "common/SmartData.h"
+#include "../SmartData.h"
+
 
 namespace SmartCtlOutputParser
 {

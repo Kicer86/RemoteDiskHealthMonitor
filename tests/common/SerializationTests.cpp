@@ -7,8 +7,8 @@
 TEST(SerializationTest, DiskInfo)
 {
     const DiskInfo di("disk #1", GeneralHealth::CHECK_STATUS, {
-        ProbeStatus{.health = GeneralHealth::GOOD, .rawData = "Some data"},
-        ProbeStatus{.health = GeneralHealth::BAD, .rawData = "Some other data"}
+        ProbeStatus{.health = GeneralHealth::GOOD, .jsonData = "Some data"},
+        ProbeStatus{.health = GeneralHealth::BAD, .jsonData = "Some other data"}
     });
 
     QByteArray data;
@@ -30,8 +30,8 @@ TEST(SerializationTest, DiskInfoList)
 {
     const std::vector<DiskInfo> di_vec = {
         DiskInfo("disk #1", GeneralHealth::CHECK_STATUS, {
-            ProbeStatus{.health = GeneralHealth::GOOD, .rawData = "Some data"},
-            ProbeStatus{.health = GeneralHealth::BAD, .rawData = "Some other data"}
+            ProbeStatus{.health = GeneralHealth::GOOD, .jsonData = "Some data"},
+            ProbeStatus{.health = GeneralHealth::BAD, .jsonData = "Some other data"}
         })
     };
 

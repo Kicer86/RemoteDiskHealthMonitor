@@ -49,7 +49,7 @@ namespace SmartCtlOutputParser
                     const QString& worst = rawAttributeSplitted[4];     // WORST
                     const QString& rawValue = rawAttributeSplitted[9];  // RAW_VALUE
 
-                    smartData.smartData.emplace(
+                    smartData.add(
                         static_cast<SmartData::SmartAttribute>(id.toUInt()),
                         SmartData::AttrData {
                             value.toInt(),

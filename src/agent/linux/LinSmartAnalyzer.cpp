@@ -8,9 +8,9 @@ GeneralHealth::Health LinSmartAnalyzer::GetStatus(const Disk& _disk)
 }
 
 
-IProbe::RawData LinSmartAnalyzer::GetRawData(const Disk& _disk)
+QString LinSmartAnalyzer::GetJSonData(const Disk& _disk)
 {
     const auto smart = SmartReader().ReadSMARTData(_disk);
 
-    return smart;
+    return smart.toJSon();
 }

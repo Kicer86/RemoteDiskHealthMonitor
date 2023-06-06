@@ -4,7 +4,6 @@
 #include <QDataStream>
 
 #include "DiskInfo.h"
-#include "SmartDataSerialize.h"
 #include "ProbeStatusSerialize.h"
 
 

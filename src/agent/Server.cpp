@@ -115,7 +115,7 @@ void Server::CollectInfoAboutDiscs()
         {
             ProbeStatus status;
             status.health = probe->GetStatus(disk);
-            status.rawData = probe->GetRawData(disk);
+            status.jsonData = probe->GetJSonData(disk);
 
             probesStatuses.push_back(status);
         }

@@ -2,19 +2,21 @@
 find_package(Qt6 REQUIRED COMPONENTS Core RemoteObjects)
 
 ADD_EXECUTABLE( agent
-				main.cpp
-				IProbe.h
-				ISmartReader.h
-				SmartReader.h
-                Server.h
-                Server.cpp
+    main.cpp
+    IProbe.h
+    ISmartReader.h
+    SmartReader.h
+    Server.h
+    Server.cpp
+    SmartData.cpp
+    SmartData.h
 
-                DiscStatusCalculator.h
-                DiscStatusCalculator.cpp
-                IDiskCollector.h
-                Disk.h
-                Disk.cpp
-                SystemUtilitiesFactory.h
+    DiscStatusCalculator.h
+    DiscStatusCalculator.cpp
+    IDiskCollector.h
+    Disk.h
+    Disk.cpp
+    SystemUtilitiesFactory.h
 )
 
 qt_add_repc_sources(agent ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep)

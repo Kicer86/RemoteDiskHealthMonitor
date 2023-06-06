@@ -1,3 +1,7 @@
+
+#include <QJsonDocument>
+#include <QJsonObject>
+
 #include "SmartData.h"
 
 namespace
@@ -67,6 +71,38 @@ namespace
         {	SmartData::FreeFallProtection,            "FreeFallProtection"	}
     };
 }
+
+
+void SmartData::add(SmartData::SmartAttribute attr, const SmartData::AttrData& value)
+{
+    m_smartData.emplace(attr, value);
+}
+
+
+const std::map<SmartData::SmartAttribute, SmartData::AttrData>& SmartData::data() const
+{
+    return m_smartData;
+}
+
+
+QString SmartData::toJSon() const
+{
+    QJsonObject jsonObject;
+
+    for (const auto& e: m_smartData)
+    {
+        QJsonObject value;
+        value.insert("raw_value", e.second.rawVal);
+        value.insert("value", e.second.value);
+        value.insert("word", e.second.worst);
+
+        jsonObject.insert(GetAttrTypeName(e.first), value);
+    }
+
+    QJsonDocument doc(jsonObject);
+    return doc.toJson(QJsonDocument::Compact);
+}
+
 
 QString SmartData::GetAttrTypeName(const SmartAttribute& _uChar)
 {

@@ -106,7 +106,7 @@ TEST(SmartCtlOutputParserTest, fullOutput)
         )"
     );
 
-    EXPECT_THAT(result.smartData, UnorderedElementsAre(
+    EXPECT_THAT(result.data(), UnorderedElementsAre(
         std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::ReadErrorRate,             SmartData::AttrData{200, 200, 0    } },
         std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::SpinUpTime,                SmartData::AttrData{171, 170, 2408 } },
         std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::StartStopCount,            SmartData::AttrData{ 99,  99, 1140 } },

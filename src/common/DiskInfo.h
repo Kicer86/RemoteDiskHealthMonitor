@@ -3,7 +3,6 @@
 
 #include <string>
 #include "GeneralHealth.h"
-#include "SmartData.h"
 #include "ProbeStatus.h"
 
 class DiskInfo

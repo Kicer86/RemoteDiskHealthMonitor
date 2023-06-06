@@ -1,4 +1,7 @@
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QProcess>
 
 #include "common/GeneralHealth.h"
@@ -22,22 +25,21 @@ GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-IProbe::RawData LinGeneralAnalyzer::GetRawData(const Disk& disk)
+QString LinGeneralAnalyzer::GetJSonData(const Disk& disk)
 {
-    std::string result;
+    QJsonObject jsonObject;
 
     auto it = m_errors.find(disk);
-
     if (it != m_errors.end())
     {
-        QStringList errors;
+        QJsonArray errors;
         std::copy(it->second.begin(), it->second.end(), std::back_inserter(errors));
 
-        const QString errorline = errors.join('\n');
-        result = errorline.toStdString();
+        jsonObject.insert("errors", errors);
     }
 
-    return result;
+    QJsonDocument doc(jsonObject);
+    return doc.toJson(QJsonDocument::Compact);
 }
 
 
