@@ -129,8 +129,6 @@ Item {
 
             TableView {
                 id: tableView
-                //width: 600
-                //height: 300
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.rowSpan: 5
@@ -160,6 +158,7 @@ Item {
 
                 model: TableModel {
                     id: tableModel
+                    property bool colorOption: true
                     TableModelColumn { display: "attr" }
                     TableModelColumn { display: "value" }
                     TableModelColumn { display: "worst" }
@@ -176,12 +175,19 @@ Item {
                 delegate: Rectangle {
                     id: delegateRectangle
                     implicitWidth: 100
-                    //implicitHeight: 1
-                    border.width: 0.5
+                    border.width: 0
+                    color: {
+                        if (tableModel.colorOption)
+                            {
+                                return "white"
+                            } else
+                            {
+                                return "gray"
+                            }
+                         }
 
                     Text {
                         text: display
-                        //anchors.fill: parent
                         anchors.centerIn: parent
                     }
                 }
@@ -210,6 +216,8 @@ Item {
                 worst: data[2],
                 rawVal: data[3]
             })
+            var modelObject = tableView.model
+            modelObject.colorOption=!modelObject.colorOption
         }
     }
 
@@ -242,11 +250,11 @@ Item {
                     maxWidth = textWidth;
             }
 
-            return maxWidth + 7;   // some margin
+            return maxWidth + 10;   // some margin
 
         } else {
             metrics.text = tableView.model.getRow(i).rawVal
-            return metrics.boundingRect.width + 7;
+            return ( metrics.boundingRect.width + 10 );
         }
     }
 }
