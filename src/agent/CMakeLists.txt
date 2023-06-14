@@ -6,6 +6,7 @@ ADD_EXECUTABLE( agent
     IProbe.h
     ISmartReader.h
     SmartReader.h
+    JSonUtils.cpp
     Server.h
     Server.cpp
     SmartData.cpp
@@ -26,6 +27,7 @@ target_include_directories(agent
         ${CMAKE_CURRENT_BINARY_DIR}
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/magic_enum/include
 )
 
 target_link_libraries(agent

@@ -86,8 +86,6 @@ public:
     void add(SmartAttribute, const AttrData &);
     const std::map<SmartAttribute, AttrData>& data() const;
 
-    QString toJSon() const;
-
     static QString GetAttrTypeName(const SmartAttribute& _uChar);
 
 private:

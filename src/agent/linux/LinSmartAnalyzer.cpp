@@ -1,6 +1,7 @@
 
 #include "LinSmartAnalyzer.h"
 #include "../SmartReader.h"
+#include "../JSonUtils.hpp"
 
 GeneralHealth::Health LinSmartAnalyzer::GetStatus(const Disk& _disk)
 {
@@ -12,5 +13,5 @@ QString LinSmartAnalyzer::GetJSonData(const Disk& _disk)
 {
     const auto smart = SmartReader().ReadSMARTData(_disk);
 
-    return smart.toJSon();
+    return JSonUtils::SmartDataToJSon(smart);
 }
