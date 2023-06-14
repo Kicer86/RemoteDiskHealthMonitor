@@ -148,12 +148,12 @@ Item {
 
                 ScrollBar.vertical: ScrollBar {
                     anchors.right: parent.right
-                    visible: listView.contentHeight > listView.height
+                    visible: agentList.contentHeight > agentList.height
                 }
 
                 ScrollBar.horizontal: ScrollBar {
                     anchors.bottom: parent.bottom
-                    visible: listView.contentWidth > listView.width
+                    visible: agentList.contentWidth > agentList.width
                 }
 
                 model: TableModel {
@@ -174,12 +174,13 @@ Item {
 
                 delegate: Rectangle {
                     id: delegateRectangle
+                    required property var row
                     implicitWidth: 100
                     border.width: 0
                     color: {
-                        if (tableModel.colorOption)
+                        if (row % 2)
                             {
-                                return "white"
+                                return "light gray"
                             } else
                             {
                                 return "gray"
