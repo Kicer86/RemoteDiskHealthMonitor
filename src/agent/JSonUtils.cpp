@@ -18,8 +18,9 @@ namespace JSonUtils
     {
         QString wrap(const QJsonObject& data, DataType dt)
         {
+            const std::string dataType(magic_enum::enum_name(dt));
             QJsonObject json;
-            json.insert("type", magic_enum::enum_name(dt));
+            json.insert("type", QString::fromStdString(dataType));
             json.insert("data", data);
 
             QJsonDocument doc(json);
@@ -36,7 +37,7 @@ namespace JSonUtils
             QJsonObject value;
             value.insert("raw_value", e.second.rawVal);
             value.insert("value", e.second.value);
-            value.insert("word", e.second.worst);
+            value.insert("worst", e.second.worst);
 
             smartDataJSon.insert(SmartData::GetAttrTypeName(e.first), value);
         }
