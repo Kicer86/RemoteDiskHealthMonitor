@@ -158,7 +158,6 @@ Item {
 
                 model: TableModel {
                     id: tableModel
-                    property bool colorOption: true
                     TableModelColumn { display: "attr" }
                     TableModelColumn { display: "value" }
                     TableModelColumn { display: "worst" }
@@ -217,16 +216,12 @@ Item {
                 worst: data[2],
                 rawVal: data[3]
             })
-            var modelObject = tableView.model
-            modelObject.colorOption=!modelObject.colorOption
         }
     }
-
 
     TextMetrics {
         id: metrics
     }
-
 
     function rowHeightFun(row) {
         var txt = tableModel.rows[row].attr
