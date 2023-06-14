@@ -1,7 +1,9 @@
 
 #include <chrono>
 #include <iterator>
-#include <QDebug>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "common/DiskInfoSerialize.h"
 #include "AgentsList.hpp"
@@ -119,23 +121,35 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
 
                     ProbeStatus status = statuses[1];
 
-                    SmartData sData = std::get<SmartData>(status.rawData);
+                    QJsonDocument json = QJsonDocument::fromJson(status.jsonData.toUtf8());
+                    const auto jsonObj = json.object();
 
-                    QString item;
+                    assert(jsonObj.contains("type"));
+                    assert(jsonObj.contains("data"));
+                    assert(jsonObj["data"].isObject());
 
-                    auto data = sData.smartData;
-                        for (const auto& i : data)
+                    if (jsonObj["type"] == "SmartTable")
+                    {
+                        QString item;
+
+                        auto data = jsonObj["data"].toObject();
+                        for (auto it = data.begin(); it != data.end(); ++it)
                         {
-                            item += SmartData::GetAttrTypeName(i.first);
+                            const QString name = it.key();
+                            const auto value = it.value().toObject();
+
+                            item += name;
                             item += ",";
-                            item += QString::number(i.second.value);
+
+                            item += value["value"].toString();
                             item += ",";
-                            item += QString::number(i.second.worst);
+                            item += value["worst"].toString();
                             item += ",";
-                            item += QString::number(i.second.rawVal);
+                            item += value["rawVal"].toString();
                             item += ";";
                         }
-                    names.append(item);
+                        names.append(item);
+                    }
                 }
             }
             result = names;
