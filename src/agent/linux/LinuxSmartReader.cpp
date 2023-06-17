@@ -6,16 +6,20 @@
 #include "SmartCtlOutputParser.h"
 
 
-SmartData SmartReader::ReadSMARTData(const Disk &)
+SmartData SmartReader::ReadSMARTData(const Disk& disk)
 {
     QProcess smartctl;
 
-    smartctl.start("smartctl", { "-a", "/dev/sda" }, QProcess::ReadOnly);
-    smartctl.waitForFinished(5000);
+    const QString diskName = QString::fromStdString(disk.GetDeviceId());
+
+    qDebug() << "Reading S.M.A.R.T. of"  << diskName;
+
+    smartctl.start("smartctl", { "-a", "/dev/" + diskName }, QProcess::ReadOnly);
+    const bool status = smartctl.waitForFinished(5000);
+
+    qDebug() << "Finished with:" << status;
+
     const QByteArray output = smartctl.readAll();
-
-    qDebug() << output;
-
     const auto entries = SmartCtlOutputParser::parse(output);
 
     return entries;
