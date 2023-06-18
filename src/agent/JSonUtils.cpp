@@ -34,12 +34,16 @@ namespace JSonUtils
 
         for (const auto& e: data.data())
         {
-            QJsonObject value;
-            value.insert("raw_value", e.second.rawVal);
-            value.insert("value", e.second.value);
-            value.insert("worst", e.second.worst);
+            const auto name = SmartData::GetAttrTypeName(e.first);
+            if (name)
+            {
+                QJsonObject value;
+                value.insert("raw_value", e.second.rawVal);
+                value.insert("value", e.second.value);
+                value.insert("worst", e.second.worst);
 
-            smartDataJSon.insert(SmartData::GetAttrTypeName(e.first), value);
+                smartDataJSon.insert(name.value(), value);
+            }
         }
 
         return wrap(smartDataJSon, DataType::SmartTable);
