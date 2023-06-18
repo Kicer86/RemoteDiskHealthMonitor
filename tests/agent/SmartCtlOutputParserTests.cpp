@@ -68,18 +68,18 @@ TEST(SmartCtlOutputParserTest, fullOutput)
             SMART Attributes Data Structure revision number: 16
             Vendor Specific SMART Attributes with Thresholds:
             ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-            1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail  Always       -       0
-            3 Spin_Up_Time            0x0027   171   170   021    Pre-fail  Always       -       2408
-            4 Start_Stop_Count        0x0032   099   099   000    Old_age   Always       -       1140
-            5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-            7 Seek_Error_Rate         0x002e   200   200   000    Old_age   Always       -       0
-            9 Power_On_Hours          0x0032   084   084   000    Old_age   Always       -       12128
-            10 Spin_Retry_Count        0x0032   100   100   000    Old_age   Always       -       0
-            11 Calibration_Retry_Count 0x0032   100   100   000    Old_age   Always       -       0
-            12 Power_Cycle_Count       0x0032   099   099   000    Old_age   Always       -       1138
+            1 Raw_Read_Error_Rate       0x002f   200   200   051    Pre-fail  Always       -       0
+            3 Spin_Up_Time              0x0027   171   170   021    Pre-fail  Always       -       2408
+            4 Start_Stop_Count          0x0032   099   099   000    Old_age   Always       -       1140
+            5 Reallocated_Sector_Ct     0x0033   200   200   140    Pre-fail  Always       -       0
+            7 Seek_Error_Rate           0x002e   200   200   000    Old_age   Always       -       0
+            9 Power_On_Hours            0x0032   084   084   000    Old_age   Always       -       12128
+            10 Spin_Retry_Count         0x0032   100   100   000    Old_age   Always       -       0
+            11 Calibration_Retry_Count  0x0032   100   100   000    Old_age   Always       -       0
+            12 Power_Cycle_Count        0x0032   099   099   000    Old_age   Always       -       1138
             192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       30
             193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       1295
-            194 Temperature_Celsius     0x0022   111   098   000    Old_age   Always       -       32
+            194 Temperature_Celsius     0x0022   111   098   000    Old_age   Always       -       32 (Min/Max 18/44)
             196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
             197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       0
             198 Offline_Uncorrectable   0x0030   200   200   000    Old_age   Offline      -       0

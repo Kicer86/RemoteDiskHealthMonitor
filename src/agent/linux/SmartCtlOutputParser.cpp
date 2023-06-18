@@ -42,7 +42,7 @@ namespace SmartCtlOutputParser
                 const QString rawAttributeSimplified = rawAttribute.simplified();   // drop all redundant spaces
                 const QStringList rawAttributeSplitted = rawAttributeSimplified.split(' ');
 
-                if (rawAttributeSplitted.size() == 10)  // 10 columns expected (ID# ATTRIBUTE_NAME FLAG VALUE WORST THRESH TYPE UPDATED WHEN_FAILED RAW_VALUE)
+                if (rawAttributeSplitted.size() >= 10)  // at least 10 columns expected (ID# ATTRIBUTE_NAME FLAG VALUE WORST THRESH TYPE UPDATED WHEN_FAILED RAW_VALUE (extra details))
                 {
                     const QString& id = rawAttributeSplitted[0];        // ID#
                     const QString& value = rawAttributeSplitted[3];     // VALUE
