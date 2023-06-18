@@ -176,15 +176,7 @@ Item {
                     required property var row
                     implicitWidth: 100
                     border.width: 0
-                    color: {
-                        if (row % 2)
-                            {
-                                return "light gray"
-                            } else
-                            {
-                                return "gray"
-                            }
-                         }
+                    color: (row % 2) ? "light gray" : "gray"
 
                     Text {
                         text: display
