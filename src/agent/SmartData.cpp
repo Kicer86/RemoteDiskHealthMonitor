@@ -16,7 +16,7 @@ const std::map<SmartData::SmartAttribute, SmartData::AttrData>& SmartData::data(
 }
 
 
-QString SmartData::GetAttrTypeName(const SmartAttribute& attr)
+std::optional<QString> SmartData::GetAttrTypeName(const SmartAttribute& attr)
 {
     if (magic_enum::enum_contains(attr))
     {
@@ -24,5 +24,5 @@ QString SmartData::GetAttrTypeName(const SmartAttribute& attr)
         return QString::fromStdString(name);
     }
     else
-        return "Unknown Attribute";
+        return {};
 }
