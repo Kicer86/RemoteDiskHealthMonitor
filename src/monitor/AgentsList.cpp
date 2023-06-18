@@ -117,11 +117,10 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                 auto diskInfoVec = it.value();
                 for (auto& i : diskInfoVec)
                 {
-                    std::vector<ProbeStatus> statuses = i.GetProbesStatuses();
+                    const std::vector<ProbeStatus> statuses = i.GetProbesStatuses();
+                    const ProbeStatus status = statuses[1];
 
-                    ProbeStatus status = statuses[1];
-
-                    QJsonDocument json = QJsonDocument::fromJson(status.jsonData.toUtf8());
+                    const QJsonDocument json = QJsonDocument::fromJson(status.jsonData.toUtf8());
                     const auto jsonObj = json.object();
 
                     assert(jsonObj.contains("type"));
@@ -133,6 +132,7 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                         QString item;
 
                         auto data = jsonObj["data"].toObject();
+
                         for (auto it = data.begin(); it != data.end(); ++it)
                         {
                             const QString name = it.key();
@@ -141,13 +141,14 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                             item += name;
                             item += ",";
 
-                            item += value["value"].toString();
+                            item += QString::number(value["value"].toInt());
                             item += ",";
-                            item += value["worst"].toString();
+                            item += QString::number(value["worst"].toInt());
                             item += ",";
-                            item += value["rawVal"].toString();
+                            item += QString::number(value["raw_value"].toInt());
                             item += ";";
                         }
+
                         names.append(item);
                     }
                 }
