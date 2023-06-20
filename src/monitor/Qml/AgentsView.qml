@@ -148,12 +148,12 @@ Item {
 
                 ScrollBar.vertical: ScrollBar {
                     anchors.right: parent.right
-                    visible: agentList.contentHeight > agentList.height
+                    visible: tableView.contentHeight > tableView.height
                 }
 
                 ScrollBar.horizontal: ScrollBar {
                     anchors.bottom: parent.bottom
-                    visible: agentList.contentWidth > agentList.width
+                    visible: tableView.contentWidth > tableView.width
                 }
 
                 model: TableModel {
