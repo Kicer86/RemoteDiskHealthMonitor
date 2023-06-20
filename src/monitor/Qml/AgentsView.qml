@@ -208,7 +208,6 @@ Item {
 
         for(var i = 0; i < agentDetailsDisksComboBox.stringList.length; i++)
         {
-            console.log(agentDetailsDisksComboBox.stringList[i]);
             var data = agentDetailsDisksComboBox.stringList[i].split(',')
             tableView.model.appendRow({
                 attr: data[0],
