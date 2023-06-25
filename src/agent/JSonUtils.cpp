@@ -1,6 +1,5 @@
 
 #include <QJsonDocument>
-#include <QJsonObject>
 
 #include <magic_enum.hpp>
 
@@ -26,7 +25,46 @@ namespace JSonUtils
             QJsonDocument doc(json);
             return doc.toJson(QJsonDocument::Compact);
         }
+
+
+        QJsonObject ProbeStatusToJson(const ProbeStatus& probe)
+        {
+            QJsonObject probeJson;
+
+            probeJson["status"] = probe.health;
+            probeJson["details"] = probe.jsonData;
+
+            return probeJson;
+        }
+
+
+        QJsonArray ProbeStatusToJson(const std::vector<ProbeStatus>& probes)
+        {
+            QJsonArray probesJson;
+
+            for(const auto& probe: probes)
+            {
+                const auto probeJson = ProbeStatusToJson(probe);
+                probesJson.append(probeJson);
+            }
+
+            return probesJson;
+        }
+
+
+        QJsonObject DiskInfoToJSon(const DiskInfo& di)
+        {
+            QJsonObject diskJson;
+
+            diskJson["name"] = di.GetName();
+            diskJson["status"] = di.GetHealth();
+            diskJson["probes"] = ProbeStatusToJson(di.GetProbesStatuses());
+
+            return diskJson;
+        }
+
     }
+
 
     QString SmartDataToJSon(const SmartData& data)
     {
@@ -48,4 +86,19 @@ namespace JSonUtils
 
         return wrap(smartDataJSon, DataType::SmartTable);
     }
+
+
+    QJsonArray DiskInfoToJSon(const std::vector<DiskInfo>& di)
+    {
+        QJsonArray disksJson;
+
+        for(const auto& disk: di)
+        {
+            const auto diskJson = DiskInfoToJSon(disk);
+            disksJson.append(diskJson);
+        }
+
+        return disksJson;
+    }
+
 }
