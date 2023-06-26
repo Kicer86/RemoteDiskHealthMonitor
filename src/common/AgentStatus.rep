@@ -1,4 +1,6 @@
 
+#include <QJsonDocument>
+
 #include "common/GeneralHealth.h"
 #include "common/DiskInfo.h"
 #include "common/DiskInfoSerialize.h"
@@ -6,7 +8,7 @@
 class AgentStatus
 {
     PROP(GeneralHealth::Health overallStatus = GeneralHealth::Health::UNKNOWN);
-    PROP(QByteArray diskInfoCollection)
+    PROP(QJsonDocument diskInfoCollection)
 
     SLOT(refresh());
 };

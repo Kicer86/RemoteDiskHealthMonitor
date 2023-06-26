@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <QJsonArray>
 #include <QObject>
 
 #include "AgentInformation.hpp"
@@ -18,6 +19,6 @@ class IAgentsStatusProvider: public QObject
 
     signals:
         void statusChanged(const AgentInformation &, const GeneralHealth::Health &);
-        void diskCollectionChanged(const AgentInformation&, const QByteArray &);
+        void diskCollectionChanged(const AgentInformation&, const QJsonDocument &);
 
 };

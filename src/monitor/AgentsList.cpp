@@ -6,6 +6,7 @@
 #include <QJsonObject>
 
 #include "common/DiskInfoSerialize.h"
+#include "common/JSonUtils.hpp"
 #include "AgentsList.hpp"
 
 
@@ -127,6 +128,8 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                     assert(jsonObj.contains("data"));
                     assert(jsonObj["data"].isObject());
 
+                    std::cout << json.toJson().data();
+
                     if (jsonObj["type"] == "SmartTable")
                     {
                         QString item;
@@ -190,13 +193,17 @@ void AgentsList::updateAgentHealth(const AgentInformation& info, const GeneralHe
     }
 }
 
-void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, const QByteArray& _diskInfoBin)
+void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, const QJsonDocument& _diskInfoJson)
 {
     auto it = std::find(m_agents.begin(), m_agents.end(), _info);
 
     if (it != m_agents.end())
     {
-        const std::vector<DiskInfo> _diskInfoCollection = byteArrayToDiskInfo(_diskInfoBin);
+        std::cout << _diskInfoJson.toJson().data() << std::endl;
+        const auto jsonObj = _diskInfoJson.object();
+        const auto disksJson = jsonObj["disks"].toArray();
+
+        const std::vector<DiskInfo> _diskInfoCollection = JSonUtils::JSonToDiskInfo(disksJson);
 
         m_diskInfoCollection[_info] = _diskInfoCollection;
 

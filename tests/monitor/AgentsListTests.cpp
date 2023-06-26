@@ -1,10 +1,13 @@
 
 #include <gmock/gmock.h>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSignalSpy>
 
 #include "AgentsList.hpp"
 #include "IAgentsStatusProviderMock.hpp"
 #include "common/DiskInfoSerialize.h"
+#include "common/JSonUtils.hpp"
 
 
 using testing::_;
@@ -322,8 +325,16 @@ TEST(AgentsListTest, DiskInfoCollectionUpdateAfterFetch)
     v2.push_back(di2a);
     v2.push_back(di2b);
 
-    emit statusProvider.diskCollectionChanged(info1, diskInfoToByteArray(v1));
-    emit statusProvider.diskCollectionChanged(info2, diskInfoToByteArray(v2));
+    QJsonObject jsonObj1;
+    jsonObj1["disks"] = JSonUtils::DiskInfoToJSon(v1);
+    const QJsonDocument doc1(jsonObj1);
+
+    QJsonObject jsonObj2;
+    jsonObj2["disks"] = JSonUtils::DiskInfoToJSon(v2);
+    const QJsonDocument doc2(jsonObj2);
+
+    emit statusProvider.diskCollectionChanged(info1, doc1);
+    emit statusProvider.diskCollectionChanged(info2, doc2);
 
     const QModelIndex idx1 = aal.index(0, 0);
     const QModelIndex idx2 = aal.index(1, 0);

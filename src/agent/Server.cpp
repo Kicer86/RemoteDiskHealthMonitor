@@ -1,14 +1,18 @@
 
-#include "Server.h"
-#include <QNetworkInterface>
 #include <QDataStream>
+#include <QJsonDocument>
 #include <QTcpSocket>
+#include <QNetworkInterface>
 #include <iostream>
+
 #include "common/constants.hpp"
+#include "common/JSonUtils.hpp"
 #include "common/ProtocolVersion.h"
+#include "DiscStatusCalculator.h"
+#include "JSonUtils.hpp"
 #include "SmartReader.h"
 #include "SystemUtilitiesFactory.h"
-#include "DiscStatusCalculator.h"
+#include "Server.h"
 
 
 Server::Server(QObject * parent)
@@ -71,7 +75,7 @@ void Server::setOverallStatus(GeneralHealth::Health overallStatus)
     emit overallStatusChanged(m_health);
 }
 
-void Server::setDiskInfoCollection(QByteArray diskInfoCollection)
+void Server::setDiskInfoCollection(QJsonDocument diskInfoCollection)
 {
     m_diskInfoCollection = diskInfoCollection;
 
@@ -84,7 +88,7 @@ GeneralHealth::Health Server::overallStatus() const
     return m_health;
 }
 
-QByteArray Server::diskInfoCollection() const
+QJsonDocument Server::diskInfoCollection() const
 {
     return m_diskInfoCollection;
 }
@@ -134,8 +138,14 @@ void Server::CollectInfoAboutDiscs()
     });
 
     const auto cumulativeDiskStatus = calc.CalculateCumulativeStatus(diskStatuses);
+    const auto diskArrayJson = JSonUtils::DiskInfoToJSon(discInfoCollection);
+
+    QJsonObject disksJson;
+    disksJson["disks"] = diskArrayJson;
+
+    const QJsonDocument jsonDoc(disksJson);
 
     setOverallStatus(cumulativeDiskStatus);
-    setDiskInfoCollection(diskInfoToByteArray(discInfoCollection));
+    setDiskInfoCollection(jsonDoc);
 }
 

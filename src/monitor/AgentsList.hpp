@@ -45,5 +45,5 @@ private:
     IAgentsStatusProvider& m_statusProvider;
 
     void updateAgentHealth(const AgentInformation &, const GeneralHealth::Health &);
-    void updateAgentDiskInfoCollection(const AgentInformation&, const QByteArray &);
+    void updateAgentDiskInfoCollection(const AgentInformation&, const QJsonDocument &);
 };
