@@ -1,9 +1,6 @@
 
-#ifndef JSONUTILS_HPP_INCLUDED
-#define JSONUTILS_HPP_INCLUDED
-
-#include <QJsonArray>
-#include <QJsonObject>
+#ifndef AGENT_JSONUTILS_HPP_INCLUDED
+#define AGENT_JSONUTILS_HPP_INCLUDED
 
 #include <QString>
 
@@ -14,9 +11,7 @@
 namespace JSonUtils
 {
     QString SmartDataToJSon(const SmartData &);
-    QJsonArray DiskInfoToJSon(const std::vector<DiskInfo> &);
-    std::vector<DiskInfo> JSonToDiskInfo(const QByteArray &);
 }
 
 
-#endif // JSONUTILS_HPP_INCLUDED
+#endif

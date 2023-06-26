@@ -4,6 +4,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 add_library(common OBJECT
     constants.hpp
     GeneralHealth.h
+    JSonUtils.cpp
     ProbeStatus.h
     ProbeStatusSerialize.h
     ProtocolVersion.h
