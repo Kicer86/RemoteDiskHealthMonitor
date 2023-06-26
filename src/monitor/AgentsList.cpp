@@ -5,7 +5,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "common/DiskInfoSerialize.h"
 #include "common/JSonUtils.hpp"
 #include "AgentsList.hpp"
 

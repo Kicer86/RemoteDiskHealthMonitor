@@ -6,13 +6,11 @@ add_library(common OBJECT
     GeneralHealth.h
     JSonUtils.cpp
     ProbeStatus.h
-    ProbeStatusSerialize.h
     ProtocolVersion.h
     OutputParsersUtils.cpp
     OutputParsersUtils.h
     GeneralHealth.cpp
     DiskInfo.h
-    DiskInfoSerialize.h
     DiskInfo.cpp)
 
 target_include_directories(common

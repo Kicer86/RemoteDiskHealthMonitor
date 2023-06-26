@@ -2,8 +2,6 @@
 #include <QJsonDocument>
 
 #include "common/GeneralHealth.h"
-#include "common/DiskInfo.h"
-#include "common/DiskInfoSerialize.h"
 
 class AgentStatus
 {

@@ -2,8 +2,6 @@
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_executable(commonTests
-    ProbeStatusTests.cpp
-    SerializationTests.cpp
 )
 
 target_include_directories(commonTests

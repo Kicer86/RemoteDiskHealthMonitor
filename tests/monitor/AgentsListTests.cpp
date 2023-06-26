@@ -6,7 +6,6 @@
 
 #include "AgentsList.hpp"
 #include "IAgentsStatusProviderMock.hpp"
-#include "common/DiskInfoSerialize.h"
 #include "common/JSonUtils.hpp"
 
 
