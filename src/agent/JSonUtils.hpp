@@ -15,6 +15,7 @@ namespace JSonUtils
 {
     QString SmartDataToJSon(const SmartData &);
     QJsonArray DiskInfoToJSon(const std::vector<DiskInfo> &);
+    std::vector<DiskInfo> JSonToDiskInfo(const QByteArray &);
 }
 
 
