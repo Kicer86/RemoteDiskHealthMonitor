@@ -110,6 +110,7 @@ Item {
 
                 onVisibleChanged: {
                     fillSmartTable(currentIndex)
+                    tableView.forceLayout()
                 }
 
                 onCurrentIndexChanged: {
@@ -122,13 +123,12 @@ Item {
                     })
 
                     fillSmartTable(currentIndex)
+                    tableView.forceLayout()
                 }
             }
 
             TableView {
                 id: tableView
-                width: 600
-                height: 300
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.rowSpan: 5
@@ -140,17 +140,24 @@ Item {
                 visible: false
                 boundsMovement: Flickable.StopAtBounds
 
+                columnWidthProvider: columnWidthFun
+                rowHeightProvider: rowHeightFun
+
+                onWidthChanged: tableView.forceLayout();
+                onHeightChanged: tableView.forceLayout()
+
                 ScrollBar.vertical: ScrollBar {
                     anchors.right: parent.right
-                    visible: listView.contentHeight > listView.height
+                    visible: agentList.contentHeight > agentList.height
                 }
 
                 ScrollBar.horizontal: ScrollBar {
                     anchors.bottom: parent.bottom
-                    visible: listView.contentWidth > listView.width
+                    visible: agentList.contentWidth > agentList.width
                 }
 
                 model: TableModel {
+                    id: tableModel
                     TableModelColumn { display: "attr" }
                     TableModelColumn { display: "value" }
                     TableModelColumn { display: "worst" }
@@ -165,9 +172,11 @@ Item {
                 }
 
                 delegate: Rectangle {
-                    implicitWidth: 150
-                    implicitHeight: 20
-                    border.width: 1
+                    id: delegateRectangle
+                    required property var row
+                    implicitWidth: 100
+                    border.width: 0
+                    color: (row % 2) ? "light gray" : "gray"
 
                     Text {
                         text: display
@@ -202,5 +211,39 @@ Item {
         }
     }
 
+    TextMetrics {
+        id: metrics
+    }
+
+    function rowHeightFun(row) {
+        var txt = tableModel.rows[row].attr
+        metrics.text = txt
+        var textHeight = metrics.boundingRect.height
+
+        return textHeight + 4
+    }
+
+    function columnWidthFun(column) {
+        if (column === 0) {
+            var rows = tableView.model.rowCount
+            var maxWidth = 0;
+
+            for(var i = 0; i < rows; i++) {
+                var modelObject = tableView.model.getRow(i)
+                var txt = modelObject.attr
+                metrics.text = txt
+                var textWidth = metrics.boundingRect.width
+
+                if (textWidth > maxWidth)
+                    maxWidth = textWidth;
+            }
+
+            return maxWidth + 10;   // some margin
+
+        } else {
+            metrics.text = tableView.model.getRow(i).rawVal
+            return ( metrics.boundingRect.width + 10 );
+        }
+    }
 }
 

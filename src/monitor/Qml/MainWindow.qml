@@ -6,8 +6,8 @@ import QtQuick.Controls 2.15
 Item {
     id: mainView
 
-    width: 250
-    height: 420
+    width: 390
+    height: 520
 
     signal newAgentRequested(string name, string ip, string port)
 
