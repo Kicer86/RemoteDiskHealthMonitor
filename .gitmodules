@@ -4,3 +4,12 @@
 [submodule "QtZeroConf"]
 	path = QtZeroConf
 	url = https://github.com/jbagg/QtZeroConf.git
+[submodule "external/cpp-httplib"]
+	path = external/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "external/nlohmann-json"]
+	path = external/nlohmann-json
+	url = https://github.com/nlohmann/json.git
+[submodule "external/mdns"]
+	path = external/mdns
+	url = https://github.com/mjansson/mdns.git
