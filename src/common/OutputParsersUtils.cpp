@@ -1,38 +1,54 @@
 
 #include "OutputParsersUtils.h"
+#include <sstream>
+#include <algorithm>
 
 namespace ParsersUtils
 {
 
     namespace
     {
-        QStringList cleanup(const QStringList& list)
+        std::string trim(const std::string& str)
         {
-            QStringList clean;
+            const auto start = str.find_first_not_of(" \t\r\n");
+            if (start == std::string::npos) return "";
+            const auto end = str.find_last_not_of(" \t\r\n");
+            return str.substr(start, end - start + 1);
+        }
 
-            for(const QString& entry: list)
-                clean.append(entry.trimmed());
+        std::vector<std::string> cleanup(const std::vector<std::string>& list)
+        {
+            std::vector<std::string> clean;
+            clean.reserve(list.size());
+
+            for (const auto& entry : list)
+                clean.push_back(trim(entry));
 
             return clean;
         }
 
-        QStringList trimList(QStringList list)
+        std::vector<std::string> trimList(std::vector<std::string> list)
         {
-            while(list.isEmpty() == false && list.first().isEmpty())
-                list.removeFirst();
+            while (!list.empty() && list.front().empty())
+                list.erase(list.begin());
 
-            while(list.isEmpty() == false && list.last().isEmpty())
-                list.removeLast();
+            while (!list.empty() && list.back().empty())
+                list.pop_back();
 
             return list;
         }
     }
 
 
-    QStringList clean(const QByteArray& bytes)
+    std::vector<std::string> clean(const std::string& input)
     {
-        const QString output(bytes);
-        const auto lines = output.split('\n');
+        std::vector<std::string> lines;
+        std::istringstream stream(input);
+        std::string line;
+
+        while (std::getline(stream, line))
+            lines.push_back(line);
+
         const auto cleanLines = cleanup(lines);
         const auto trimmed = trimList(cleanLines);
 

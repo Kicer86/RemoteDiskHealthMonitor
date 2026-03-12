@@ -1,22 +1,19 @@
 #pragma once
 
-#include <QObject>
+#include <cstdint>
+#include <string>
 
 
 class GeneralHealth
 {
-    Q_GADGET
-
 public:
-    enum Health : quint8
+    enum Health : uint8_t
     {
         UNKNOWN = 0,
         GOOD,
         CHECK_STATUS,
         BAD
     };
-
-    Q_ENUM(Health)
 
     GeneralHealth();
     GeneralHealth(const Health& _health);
@@ -30,3 +27,6 @@ public:
 private:
     Health m_health;
 };
+
+std::string healthToString(GeneralHealth::Health health);
+GeneralHealth::Health healthFromString(const std::string& str);

@@ -2,7 +2,7 @@
 
 namespace
 {
-    const std::map<SmartData::SmartAttribute, QString> dictionary =
+    const std::map<SmartData::SmartAttribute, std::string> dictionary =
     {
         {	SmartData::ReadErrorRate,                 "ReadErrorRate"	}	,
         {	SmartData::ThroughputPerformance,         "ThroughputPerformance"	}	,
@@ -68,7 +68,7 @@ namespace
     };
 }
 
-QString SmartData::GetAttrTypeName(const SmartAttribute& _uChar)
+std::string SmartData::GetAttrTypeName(const SmartAttribute& _uChar)
 {
     auto it = dictionary.find(_uChar);
     if(it != dictionary.end())

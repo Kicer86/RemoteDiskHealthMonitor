@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <QByteArray>
-#include <QStringList>
+#include <string>
+#include <vector>
 
 namespace ParsersUtils
 {
-    QStringList clean(const QByteArray& output);
+    std::vector<std::string> clean(const std::string& output);
 }
