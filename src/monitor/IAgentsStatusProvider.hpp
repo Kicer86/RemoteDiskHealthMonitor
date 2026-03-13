@@ -16,6 +16,7 @@ class IAgentsStatusProvider: public QObject
         virtual ~IAgentsStatusProvider() = default;
 
         virtual void observe(const AgentInformation &) = 0;
+        virtual void unobserve(const AgentInformation &) = 0;
 
     signals:
         void statusChanged(const AgentInformation &, const GeneralHealth::Health &);

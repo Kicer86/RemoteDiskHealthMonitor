@@ -57,7 +57,10 @@ void AgentsList::removeAgentAt(int position)
     beginRemoveRows({}, position, position);
     m_agents.removeAt(position);
     m_health.remove(info);
+    m_diskInfoCollection.remove(info);
     endRemoveRows();
+
+    m_statusProvider.unobserve(info);
 }
 
 

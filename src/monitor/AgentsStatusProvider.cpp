@@ -27,6 +27,22 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
 }
 
 
+void AgentsStatusProvider::unobserve(const AgentInformation& info)
+{
+    auto it = m_connections.find(info);
+    if (it == m_connections.end())
+        return;
+
+    if (it->sseReply)
+    {
+        it->sseReply->abort();
+        it->sseReply->deleteLater();
+    }
+
+    m_connections.erase(it);
+}
+
+
 void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
 {
     const QUrl url = QStringLiteral("http://%1:%2/api/v1/refresh")
@@ -74,20 +90,37 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
     it->sseBuffer.clear();
 
     QObject::connect(sseReply, &QNetworkReply::readyRead, this, [this, info]() {
+        auto it = m_connections.find(info);
+        if (it != m_connections.end())
+            it->reconnectDelayMs = 1000;   // reset backoff on successful data
+
         processSseData(info);
     });
 
     QObject::connect(sseReply, &QNetworkReply::finished, this, [this, info, sseReply]() {
         sseReply->deleteLater();
-        // Reconnect SSE on disconnect
         auto it = m_connections.find(info);
         if (it != m_connections.end())
         {
             it->sseReply = nullptr;
-            // Delayed reconnect
-            QMetaObject::invokeMethod(this, [this, info]() { connectSse(info); },
-                                      Qt::QueuedConnection);
+            scheduleSseReconnect(info);
         }
+    });
+}
+
+
+void AgentsStatusProvider::scheduleSseReconnect(const AgentInformation& info)
+{
+    auto it = m_connections.find(info);
+    if (it == m_connections.end())
+        return;
+
+    const int delay = it->reconnectDelayMs;
+    it->reconnectDelayMs = std::min(it->reconnectDelayMs * 2, MaxReconnectDelayMs);
+
+    QTimer::singleShot(delay, this, [this, info]() {
+        if (m_connections.contains(info))
+            connectSse(info);
     });
 }
 
