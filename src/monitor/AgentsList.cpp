@@ -3,6 +3,8 @@
 #include <iterator>
 #include <QDebug>
 
+#include <nlohmann/json.hpp>
+
 #include "AgentsList.hpp"
 
 
@@ -107,37 +109,51 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
         }
         else if (role == AgentDiskInfoDataRole)
         {
-            QStringList names;
+            QStringList diskJsonList;
             auto it = m_diskInfoCollection.find(m_agents[row]);
             if (it != m_diskInfoCollection.end())
             {
-                auto diskInfoVec = it.value();
-                for (auto& i : diskInfoVec)
+                const auto& diskInfoVec = it.value();
+                for (const auto& disk : diskInfoVec)
                 {
-                    std::vector<ProbeStatus> statuses = i.GetProbesStatuses();
+                    nlohmann::json diskJson;
+                    diskJson["name"] = disk.GetName();
+                    diskJson["health"] = disk.GetHealth();
 
-                    ProbeStatus status = statuses[1];
+                    nlohmann::json probesJson = nlohmann::json::array();
+                    for (const auto& probe : disk.GetProbesStatuses())
+                    {
+                        nlohmann::json probeJson;
+                        probeJson["health"] = probe.health;
 
-                    SmartData sData = std::get<SmartData>(status.rawData);
-
-                    QString item;
-
-                    auto data = sData.smartData;
-                        for (const auto& i : data)
+                        if (std::holds_alternative<SmartData>(probe.rawData))
                         {
-                            item += QString::fromStdString(SmartData::GetAttrTypeName(i.first));
-                            item += ",";
-                            item += QString::number(i.second.value);
-                            item += ",";
-                            item += QString::number(i.second.worst);
-                            item += ",";
-                            item += QString::number(i.second.rawVal);
-                            item += ";";
+                            const auto& smart = std::get<SmartData>(probe.rawData);
+                            probeJson["type"] = "smart";
+                            nlohmann::json attrs = nlohmann::json::array();
+                            for (const auto& [attr, data] : smart.smartData)
+                            {
+                                attrs.push_back({
+                                    {"name", SmartData::GetAttrTypeName(attr)},
+                                    {"value", data.value},
+                                    {"worst", data.worst},
+                                    {"rawVal", data.rawVal}
+                                });
+                            }
+                            probeJson["attributes"] = attrs;
                         }
-                    names.append(item);
+                        else
+                        {
+                            probeJson["type"] = "text";
+                            probeJson["text"] = std::get<std::string>(probe.rawData);
+                        }
+                        probesJson.push_back(probeJson);
+                    }
+                    diskJson["probes"] = probesJson;
+                    diskJsonList.append(QString::fromStdString(diskJson.dump()));
                 }
             }
-            result = names;
+            result = diskJsonList;
         }
     }
 
