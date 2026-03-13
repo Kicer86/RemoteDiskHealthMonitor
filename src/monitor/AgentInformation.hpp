@@ -9,8 +9,6 @@
 class AgentInformation
 {
     Q_GADGET
-    QML_ELEMENT
-    QML_UNCREATABLE("Access to enum")
 
 public:
     enum class DetectionSource {
@@ -41,3 +39,18 @@ private:
 
 uint qHash(const AgentInformation &, uint seed);
 QDebug operator<<(QDebug debug, const AgentInformation &);
+
+
+namespace AgentDetection
+{
+    Q_NAMESPACE
+    QML_NAMED_ELEMENT(AgentInformation)
+
+    enum DetectionSource
+    {
+        ZeroConf  = static_cast<int>(AgentInformation::DetectionSource::ZeroConf),
+        Hardcoded = static_cast<int>(AgentInformation::DetectionSource::Hardcoded),
+    };
+
+    Q_ENUM_NS(DetectionSource)
+}

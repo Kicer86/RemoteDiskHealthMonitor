@@ -6,13 +6,11 @@
 #include "common/GeneralHealth.h"
 
 
-class HealthEnum
+namespace HealthEnum
 {
-    Q_GADGET
+    Q_NAMESPACE
     QML_ELEMENT
-    QML_UNCREATABLE("Access to enum")
 
-public:
     enum Health
     {
         UNKNOWN      = static_cast<int>(GeneralHealth::UNKNOWN),
@@ -21,5 +19,5 @@ public:
         BAD          = static_cast<int>(GeneralHealth::BAD),
     };
 
-    Q_ENUM(Health)
-};
+    Q_ENUM_NS(Health)
+}
