@@ -1,8 +1,8 @@
 
 #include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQuickItem>
-#include <QQuickView>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickStyle>
 
 #include "AgentsList.hpp"
 #include "AgentsExplorer.hpp"
@@ -39,17 +39,15 @@ namespace
 int main(int argc, char** argv)
 {
     QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Fusion");
 
     Configuration config;
-
-    qmlRegisterUncreatableType<HealthEnum>("RDHM", 1, 0, "HealthEnum", "Access to enum");
-    qmlRegisterUncreatableType<AgentInformation>("RDHM", 1, 0, "AgentInformation", "Access to enum");
 
     AgentsStatusProvider statusProvider;
     AgentsList activeAgents(statusProvider);
 
-    ManualAgentsValidator manualAgentsValdiator;
-    QObject::connect(&manualAgentsValdiator, &ManualAgentsValidator::agentDiscovered,
+    ManualAgentsValidator manualAgentsValidator;
+    QObject::connect(&manualAgentsValidator, &ManualAgentsValidator::agentDiscovered,
                      &activeAgents, &AgentsList::addAgent);
 
     AgentsExplorer agentsEnumerator;
@@ -58,21 +56,23 @@ int main(int argc, char** argv)
 
     agentsEnumerator.startListening();
 
-    QQuickView mainWindow(QUrl("qrc:/ui/MainWindow.qml"));
-    mainWindow.setResizeMode(QQuickView::SizeRootObjectToView);
-    mainWindow.show();
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("agentsModel", &activeAgents);
+    engine.rootContext()->setContextProperty("agentsValidator", &manualAgentsValidator);
 
-    auto rootObject = mainWindow.rootObject();
-    auto view = rootObject->findChild<QObject*>("activeAgents");
-    view->setProperty("model", QVariant::fromValue(&activeAgents));
-    QObject::connect(rootObject, SIGNAL(newAgentRequested(QString, QString, QString)),
-                     &manualAgentsValdiator, SLOT(addNewAgent(const QString &, const QString &, const QString &)));
+    engine.loadFromModule("RDHM.Monitor", "Main");
+
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
     restoreHardcodedAgents(config, activeAgents);
 
     const int exitCode = app.exec();
 
     storeHardcodedAgents(config, activeAgents);
+
+    return exitCode;
+}
 
     return exitCode;
 }
