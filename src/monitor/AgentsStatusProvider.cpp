@@ -45,6 +45,8 @@ void AgentsStatusProvider::unobserve(const AgentInformation& info)
 
 void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
 {
+    emit connectionStateChanged(info, ConnectionState::Connecting);
+
     const QUrl url = QStringLiteral("http://%1:%2/api/v1/refresh")
                          .arg(info.host().toString())
                          .arg(info.port());
@@ -59,11 +61,13 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
         if (reply->error() == QNetworkReply::NoError)
         {
             parseStatusJson(info, reply->readAll());
+            emit connectionStateChanged(info, ConnectionState::Connected);
         }
         else
         {
             std::cerr << "Failed to fetch status from " << info.name().toStdString()
                       << ": " << reply->errorString().toStdString() << "\n";
+            emit connectionStateChanged(info, ConnectionState::Error);
         }
 
         connectSse(info);
@@ -94,6 +98,7 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
         if (it != m_connections.end())
             it->reconnectDelayMs = 1000;   // reset backoff on successful data
 
+        emit connectionStateChanged(info, ConnectionState::Connected);
         processSseData(info);
     });
 
@@ -103,6 +108,7 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
         if (it != m_connections.end())
         {
             it->sseReply = nullptr;
+            emit connectionStateChanged(info, ConnectionState::Disconnected);
             scheduleSseReconnect(info);
         }
     });

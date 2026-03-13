@@ -18,6 +18,7 @@ AgentsList::AgentsList(IAgentsStatusProvider& statusProvider, QObject* p)
 {
     connect(&m_statusProvider, &IAgentsStatusProvider::statusChanged, this, &AgentsList::updateAgentHealth);
     connect(&m_statusProvider, &IAgentsStatusProvider::diskCollectionChanged, this, &AgentsList::updateAgentDiskInfoCollection);
+    connect(&m_statusProvider, &IAgentsStatusProvider::connectionStateChanged, this, &AgentsList::updateConnectionState);
 }
 
 
@@ -58,6 +59,7 @@ void AgentsList::removeAgentAt(int position)
     m_agents.removeAt(position);
     m_health.remove(info);
     m_diskInfoCollection.remove(info);
+    m_connectionStates.remove(info);
     endRemoveRows();
 
     m_statusProvider.unobserve(info);
@@ -158,6 +160,21 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
             }
             result = diskJsonList;
         }
+        else if (role == AgentHostRole)
+        {
+            result = m_agents[row].host().toString();
+        }
+        else if (role == AgentPortRole)
+        {
+            result = m_agents[row].port();
+        }
+        else if (role == AgentConnectionStateRole)
+        {
+            auto it = m_connectionStates.find(m_agents[row]);
+            result = it == m_connectionStates.end()
+                ? static_cast<int>(ConnectionState::Disconnected)
+                : static_cast<int>(it.value());
+        }
     }
 
     return result;
@@ -172,6 +189,9 @@ QHash<int, QByteArray> AgentsList::roleNames() const
     existingRoles.insert(AgentDetectionTypeRole, "agentDetectionType");
     existingRoles.insert(AgentDiskInfoNamesRole, "agentDiskInfoNames");
     existingRoles.insert(AgentDiskInfoDataRole, "agentDiskInfoData");
+    existingRoles.insert(AgentHostRole, "agentHost");
+    existingRoles.insert(AgentPortRole, "agentPort");
+    existingRoles.insert(AgentConnectionStateRole, "agentConnectionState");
 
 
     return existingRoles;
@@ -206,5 +226,20 @@ void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, co
 
         emit dataChanged(idx, idx, { AgentDiskInfoNamesRole });
         emit dataChanged(idx, idx, { AgentDiskInfoDataRole });
+    }
+}
+
+void AgentsList::updateConnectionState(const AgentInformation& info, ConnectionState state)
+{
+    auto it = std::find(m_agents.begin(), m_agents.end(), info);
+
+    if (it != m_agents.end())
+    {
+        m_connectionStates[info] = state;
+
+        const int pos = std::distance(m_agents.begin(), it);
+        const QModelIndex idx = index(pos, 0);
+
+        emit dataChanged(idx, idx, {AgentConnectionStateRole});
     }
 }

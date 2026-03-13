@@ -36,14 +36,19 @@ public:
         AgentDetectionTypeRole,
         AgentDiskInfoNamesRole,
         AgentDiskInfoDataRole,
+        AgentHostRole,
+        AgentPortRole,
+        AgentConnectionStateRole,
     };
 
 private:
     QVector<AgentInformation> m_agents;
     QHash<AgentInformation, GeneralHealth::Health> m_health;
     QHash<AgentInformation, std::vector<DiskInfo>> m_diskInfoCollection;
+    QHash<AgentInformation, ConnectionState> m_connectionStates;
     IAgentsStatusProvider& m_statusProvider;
 
     void updateAgentHealth(const AgentInformation &, const GeneralHealth::Health &);
     void updateAgentDiskInfoCollection(const AgentInformation&, const std::vector<DiskInfo> &);
+    void updateConnectionState(const AgentInformation &, ConnectionState);
 };
