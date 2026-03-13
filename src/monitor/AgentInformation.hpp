@@ -4,10 +4,13 @@
 #include <QDebug>
 #include <QHostAddress>
 #include <QString>
+#include <QtQml/qqmlregistration.h>
 
 class AgentInformation
 {
     Q_GADGET
+    QML_ELEMENT
+    QML_UNCREATABLE("Access to enum")
 
 public:
     enum class DetectionSource {

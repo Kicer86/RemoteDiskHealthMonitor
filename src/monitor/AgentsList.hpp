@@ -4,6 +4,7 @@
 #include <QAbstractListModel>
 #include <QHash>
 #include <QVector>
+#include <QtQml/qqmlregistration.h>
 
 #include "common/GeneralHealth.h"
 #include "common/DiskInfo.h"
@@ -14,6 +15,8 @@
 class AgentsList: public QAbstractListModel
 {
     Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("Created from C++")
 
 public:
     AgentsList(IAgentsStatusProvider &, QObject* parent = nullptr);

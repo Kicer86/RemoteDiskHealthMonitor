@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QtQml/qqmlregistration.h>
 
 #include "common/GeneralHealth.h"
 
@@ -8,6 +9,8 @@
 class HealthEnum
 {
     Q_GADGET
+    QML_ELEMENT
+    QML_UNCREATABLE("Access to enum")
 
 public:
     enum Health
