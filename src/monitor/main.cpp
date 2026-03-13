@@ -8,7 +8,7 @@
 #include "AgentsExplorer.hpp"
 #include "AgentsStatusProvider.hpp"
 #include "ManualAgentsValidator.hpp"
-#include "common/GeneralHealth.h"
+#include "HealthEnumQml.hpp"
 #include "Configuration.hpp"
 
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     Configuration config;
 
-    qmlRegisterUncreatableType<GeneralHealth>("RDHM", 1, 0, "HealthEnum", "Access to enum");
+    qmlRegisterUncreatableType<HealthEnum>("RDHM", 1, 0, "HealthEnum", "Access to enum");
     qmlRegisterUncreatableType<AgentInformation>("RDHM", 1, 0, "AgentInformation", "Access to enum");
 
     AgentsStatusProvider statusProvider;

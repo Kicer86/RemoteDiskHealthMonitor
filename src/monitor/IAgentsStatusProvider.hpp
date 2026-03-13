@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QObject>
+#include <vector>
 
 #include "AgentInformation.hpp"
 #include "common/GeneralHealth.h"
@@ -18,6 +19,6 @@ class IAgentsStatusProvider: public QObject
 
     signals:
         void statusChanged(const AgentInformation &, const GeneralHealth::Health &);
-        void diskCollectionChanged(const AgentInformation&, const QByteArray &);
+        void diskCollectionChanged(const AgentInformation&, const std::vector<DiskInfo> &);
 
 };
