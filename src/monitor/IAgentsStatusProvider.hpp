@@ -32,5 +32,6 @@ class IAgentsStatusProvider: public QObject
         void statusChanged(const AgentInformation &, const GeneralHealth::Health &);
         void diskCollectionChanged(const AgentInformation&, const std::vector<DiskInfo> &);
         void connectionStateChanged(const AgentInformation &, ConnectionState);
+        void protocolMismatch(const AgentInformation &, int agentVersion, int monitorVersion);
 
 };

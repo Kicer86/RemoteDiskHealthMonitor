@@ -31,6 +31,7 @@ private:
     QHash<AgentInformation, AgentConnection> m_connections;
 
     void fetchInitialStatus(const AgentInformation& info);
+    void fetchAgentInfo(const AgentInformation& info);
     void connectSse(const AgentInformation& info);
     void processSseData(const AgentInformation& info);
     void parseStatusJson(const AgentInformation& info, const QByteArray& json);

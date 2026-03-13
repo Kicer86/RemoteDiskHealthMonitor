@@ -7,6 +7,7 @@
 
 #include "AgentsStatusProvider.hpp"
 #include "common/JsonSerialize.h"
+#include "common/constants.hpp"
 
 
 AgentsStatusProvider::AgentsStatusProvider(QObject* parent)
@@ -71,6 +72,42 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
         }
 
         connectSse(info);
+        fetchAgentInfo(info);
+    });
+}
+
+
+void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
+{
+    const QUrl url = QStringLiteral("http://%1:%2/api/v1/info")
+                         .arg(info.host().toString())
+                         .arg(info.port());
+
+    QNetworkRequest req(url);
+    QNetworkReply* reply = m_nam.get(req);
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, info, reply]() {
+        reply->deleteLater();
+
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            try
+            {
+                nlohmann::json j = nlohmann::json::parse(reply->readAll().toStdString());
+                if (j.contains("protocol"))
+                {
+                    const int agentVersion = j.at("protocol").get<int>();
+                    const int monitorVersion = static_cast<int>(VersionOfProtocol);
+                    if (agentVersion != monitorVersion)
+                        emit protocolMismatch(info, agentVersion, monitorVersion);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Failed to parse agent info from " << info.name().toStdString()
+                          << ": " << e.what() << "\n";
+            }
+        }
     });
 }
 
