@@ -19,6 +19,8 @@ qt_add_executable(monitor
     ManualAgentsValidator.hpp
 )
 
+set_target_properties(monitor PROPERTIES AUTOMOC TRUE)
+
 qt_add_qml_module(monitor
     URI RDHM.Monitor
     VERSION 1.0
@@ -58,9 +60,4 @@ target_include_directories(monitor
         ${CMAKE_CURRENT_BINARY_DIR}
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
-)
-
-set_target_properties(monitor PROPERTIES
-    AUTOMOC TRUE
-    QT_QML_MODULE_URI RDHM.Monitor
 )
