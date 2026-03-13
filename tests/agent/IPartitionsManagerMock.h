@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <gmock/gmock.h>
@@ -8,6 +7,6 @@
 class IPartitionsManagerMock: public IPartitionsManager
 {
 public:
-    MOCK_METHOD(bool, isPartition, (const QString &), (const, override));
-    MOCK_METHOD(QString, diskForPartition, (const QString &), (const, override));
+    MOCK_METHOD(bool, isPartition, (const std::string &), (const, override));
+    MOCK_METHOD(std::string, diskForPartition, (const std::string &), (const, override));
 };

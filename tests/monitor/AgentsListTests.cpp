@@ -4,7 +4,6 @@
 
 #include "AgentsList.hpp"
 #include "IAgentsStatusProviderMock.hpp"
-#include "common/DiskInfoSerialize.h"
 
 
 using testing::_;
@@ -322,8 +321,8 @@ TEST(AgentsListTest, DiskInfoCollectionUpdateAfterFetch)
     v2.push_back(di2a);
     v2.push_back(di2b);
 
-    emit statusProvider.diskCollectionChanged(info1, diskInfoToByteArray(v1));
-    emit statusProvider.diskCollectionChanged(info2, diskInfoToByteArray(v2));
+    emit statusProvider.diskCollectionChanged(info1, v1);
+    emit statusProvider.diskCollectionChanged(info2, v2);
 
     const QModelIndex idx1 = aal.index(0, 0);
     const QModelIndex idx2 = aal.index(1, 0);

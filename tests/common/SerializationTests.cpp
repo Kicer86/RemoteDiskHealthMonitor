@@ -1,26 +1,18 @@
 
 #include <gtest/gtest.h>
 
-#include "DiskInfoSerialize.h"
+#include "common/JsonSerialize.h"
 
 
 TEST(SerializationTest, DiskInfo)
 {
     const DiskInfo di("disk #1", GeneralHealth::CHECK_STATUS, {
-        ProbeStatus{.health = GeneralHealth::GOOD, .rawData = "Some data"},
-        ProbeStatus{.health = GeneralHealth::BAD, .rawData = "Some other data"}
+        ProbeStatus{.health = GeneralHealth::GOOD, .rawData = std::string("Some data")},
+        ProbeStatus{.health = GeneralHealth::BAD, .rawData = std::string("Some other data")}
     });
 
-    QByteArray data;
-    {
-        QDataStream ds(&data, QDataStream::WriteOnly);
-        ds << di;
-    }
-
-    DiskInfo di2;
-    QDataStream ds(data);
-
-    ds >> di2;
+    nlohmann::json j = di;
+    DiskInfo di2 = j.get<DiskInfo>();
 
     EXPECT_EQ(di, di2);
 }
@@ -30,21 +22,13 @@ TEST(SerializationTest, DiskInfoList)
 {
     const std::vector<DiskInfo> di_vec = {
         DiskInfo("disk #1", GeneralHealth::CHECK_STATUS, {
-            ProbeStatus{.health = GeneralHealth::GOOD, .rawData = "Some data"},
-            ProbeStatus{.health = GeneralHealth::BAD, .rawData = "Some other data"}
+            ProbeStatus{.health = GeneralHealth::GOOD, .rawData = std::string("Some data")},
+            ProbeStatus{.health = GeneralHealth::BAD, .rawData = std::string("Some other data")}
         })
     };
 
-    QByteArray data;
-    {
-        QDataStream ds(&data, QDataStream::WriteOnly);
-        ds << di_vec;
-    }
-
-    std::vector<DiskInfo> di_vec2;
-    QDataStream ds(data);
-
-    ds >> di_vec2;
+    nlohmann::json j = di_vec;
+    auto di_vec2 = j.get<std::vector<DiskInfo>>();
 
     EXPECT_EQ(di_vec, di_vec2);
 }
