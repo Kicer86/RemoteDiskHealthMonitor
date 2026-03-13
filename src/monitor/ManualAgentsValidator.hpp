@@ -1,6 +1,5 @@
 
-#ifndef MANUALAGENTSVALIDATOR_HPP
-#define MANUALAGENTSVALIDATOR_HPP
+#pragma once
 
 #include <QObject>
 
@@ -18,6 +17,5 @@ class ManualAgentsValidator : public QObject
 
     signals:
         void agentDiscovered(const AgentInformation &);
+        void validationFailed(const QString& reason);
 };
-
-#endif
