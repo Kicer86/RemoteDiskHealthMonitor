@@ -1,5 +1,6 @@
 
-#include <QProcess>
+#include <cstdio>
+#include <array>
 
 #include "../SystemUtilitiesFactory.h"
 #include "LinuxDiskCollector.h"
@@ -34,12 +35,17 @@ struct SystemUtilitiesFactory::State
 {
     State()
     {
-        QProcess lsblk;
+        std::string output;
+        std::array<char, 4096> buffer;
 
-        lsblk.start("lsblk", { "-rMb" }, QProcess::ReadOnly);    // raw, merged arrays, size in bytes
-        lsblk.waitForFinished(5000);
+        FILE* pipe = popen("lsblk -rMb", "r");
+        if (pipe)
+        {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                output += buffer.data();
+            pclose(pipe);
+        }
 
-        const QByteArray output = lsblk.readAll();
         const auto diskData = LsblkOutputParser::parse(output);
 
         m_diskCollector = std::make_unique<LinuxDiskCollector>(diskData);
