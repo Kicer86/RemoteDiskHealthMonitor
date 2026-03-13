@@ -74,8 +74,8 @@ public:
 
     struct AttrData
     {
-        int value; 
-        int worst; 
+        int value;
+        int worst;
         int rawVal;
 
         auto operator<=>(const AttrData &) const = default;
