@@ -18,8 +18,8 @@ endif()
 enable_testing()
 
 #external projects
-add_subdirectory(googletest)
-add_subdirectory(QtZeroConf)
+add_subdirectory(external/googletest)
+add_subdirectory(external/QtZeroConf)
 #
 
 add_subdirectory(src/common)

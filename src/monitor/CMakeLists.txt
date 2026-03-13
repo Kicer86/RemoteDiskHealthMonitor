@@ -39,7 +39,6 @@ target_include_directories(monitor
     PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
         ${PROJECT_SOURCE_DIR}/src
-        ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
 )
 
