@@ -1,8 +1,27 @@
 #include "CMDCommunication.h"
-#include <fstream>
+#include <array>
+#include <cstdio>
 #include <iostream>
-#include <QProcess>
 #include <algorithm>
+
+namespace
+{
+    std::string runCommand(const std::string& cmd)
+    {
+        std::string output;
+        std::array<char, 4096> buffer;
+
+        FILE* pipe = _popen(cmd.c_str(), "r");
+        if (pipe)
+        {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                output += buffer.data();
+            _pclose(pipe);
+        }
+
+        return output;
+    }
+}
 
 GeneralHealth::Health CMDCommunication::CollectDiskStatus(const Disk& _disk)
 {
@@ -33,38 +52,28 @@ bool CMDCommunication::CompareDeviceIdWithInstanceName(const Disk& _disk, std::s
 
 std::string CMDCommunication::ExecuteDiscStatusCommand(const Disk& _disk) const
 {
-    QProcess proc;
-    QString program = "wmic";
-    QStringList arguments;
-    arguments << "diskdrive" << "get" << "deviceid,status";
-    proc.start(program, arguments);
-    proc.waitForFinished();
-    auto output = proc.readAllStandardOutput();
-
-    std::string ret = output.toStdString();
+    std::string ret = runCommand("wmic diskdrive get deviceid,status");
 
     auto diskPos = ret.find(_disk.GetDeviceId());
+    if (diskPos == std::string::npos)
+        return {};
+
     auto statusPosStart = ret.find_first_not_of(' ', diskPos + (_disk.GetDeviceId()).size());
-    auto statusPosStop = ret.find_first_of(' ', statusPosStart);
+    auto statusPosStop = ret.find_first_of(" \r\n", statusPosStart);
     ret = ret.substr(statusPosStart, statusPosStop - statusPosStart);
     return ret;
 }
 
 std::string CMDCommunication::GetInstanceName(const Disk& _disk) const
 {
-    QProcess proc;
-    QString program = "wmic";
-    QStringList arguments;
-    arguments << "diskdrive" << "get" << "DeviceID," << "PNPDeviceID";
-    proc.start(program, arguments);
-    proc.waitForFinished();
-    QString output = proc.readAllStandardOutput();
-
-    std::string ret = output.toStdString();
+    std::string ret = runCommand("wmic diskdrive get DeviceID,PNPDeviceID");
 
     auto diskPos = ret.find(_disk.GetDeviceId());
+    if (diskPos == std::string::npos)
+        return {};
+
     auto statusPosStart = ret.find_first_not_of(' ', diskPos + (_disk.GetDeviceId()).size());
-    auto statusPosStop = ret.find_first_of(' ', statusPosStart);
+    auto statusPosStop = ret.find_first_of(" \r\n", statusPosStart);
     ret = ret.substr(statusPosStart, statusPosStop - statusPosStart);
     return ret;
 }

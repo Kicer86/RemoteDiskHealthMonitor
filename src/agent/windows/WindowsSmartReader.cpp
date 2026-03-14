@@ -9,6 +9,7 @@ SmartData SmartReader::ReadSMARTData(const Disk& _disk)
 	WMICommunication wmi;
 	wmi.WMIInit();
 	wmi.CollectSMARTDataViaWMI(_disk);
+	wmi.CollectThresholdsViaWMI(_disk);
 
 	return wmi.GetSMARTData();
 }
