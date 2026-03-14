@@ -78,9 +78,8 @@ namespace
 }
 
 
-void collectAndPublish(HttpServer& server)
+void collectAndPublish(HttpServer& server, SystemUtilitiesFactory& factory)
 {
-    SystemUtilitiesFactory factory;
     auto diskCollector = factory.diskCollector();
     auto diskCollection = diskCollector->GetDisksList();
     const auto probes = factory.getProbes();
@@ -152,12 +151,12 @@ int main(int argc, char** argv)
     // Create HTTP server
     HttpServer server(agentName, RDHMPort);
 
-    server.setRefreshCallback([&server] {
-        collectAndPublish(server);
+    server.setRefreshCallback([&server, &systemUtilsFactory] {
+        collectAndPublish(server, systemUtilsFactory);
     });
 
     // Initial data collection
-    collectAndPublish(server);
+    collectAndPublish(server, systemUtilsFactory);
 
     // Start mDNS publisher
     MdnsPublisher mdns(agentName, ZeroConfServiceName, RDHMPort);
