@@ -233,3 +233,93 @@ TEST_F(SmartHealthAnalyzerTest, ZeroThresholdSkipsThresholdChecks)
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
+
+
+// ─── NVMe-specific tests ───
+
+TEST_F(SmartHealthAnalyzerTest, NvmeCriticalWarningNonZeroReturnsBad)
+{
+    SmartData data;
+    data.attributes = {
+        {1, "Critical_Warning", 0, 0, 0, 1},
+        {2, "Temperature", 0, 0, 0, 45},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
+}
+
+
+TEST_F(SmartHealthAnalyzerTest, NvmeMediaIntegrityErrorsReturnsBad)
+{
+    SmartData data;
+    data.attributes = {
+        {1, "Critical_Warning", 0, 0, 0, 0},
+        {2, "Media_and_Data_Integrity_Errors", 0, 0, 0, 3},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
+}
+
+
+TEST_F(SmartHealthAnalyzerTest, NvmePercentageUsedHighReturnsCheckStatus)
+{
+    SmartData data;
+    data.attributes = {
+        {1, "Critical_Warning", 0, 0, 0, 0},
+        {2, "Percentage_Used", 0, 0, 0, 92},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
+}
+
+
+TEST_F(SmartHealthAnalyzerTest, NvmePercentageUsed100ReturnsBad)
+{
+    SmartData data;
+    data.attributes = {
+        {1, "Critical_Warning", 0, 0, 0, 0},
+        {2, "Percentage_Used", 0, 0, 0, 100},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
+}
+
+
+TEST_F(SmartHealthAnalyzerTest, NvmeAvailableSpareThresholdBreachReturnsBad)
+{
+    SmartData data;
+    data.attributes = {
+        // Available Spare at 5%, threshold 10% → value <= threshold → BAD
+        {1, "Available_Spare", 5, 5, 10, 5},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
+}
+
+
+TEST_F(SmartHealthAnalyzerTest, NvmeHealthyReturnGood)
+{
+    SmartData data;
+    data.attributes = {
+        {1, "Critical_Warning", 0, 0, 0, 0},
+        {2, "Temperature", 0, 0, 0, 40},
+        {3, "Available_Spare", 100, 100, 10, 100},
+        {4, "Available_Spare_Threshold", 0, 0, 0, 10},
+        {5, "Percentage_Used", 0, 0, 0, 5},
+        {6, "Media_and_Data_Integrity_Errors", 0, 0, 0, 0},
+    };
+
+    EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+
+    EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
+}

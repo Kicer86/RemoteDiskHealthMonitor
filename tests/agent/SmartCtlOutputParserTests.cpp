@@ -164,3 +164,128 @@ TEST(SmartCtlOutputParserTest, handlesDashThresholdAsZero)
         SmartData::Attribute{232, "Available_Reservd_Space", 100, 100, 4, 100  }
     ));
 }
+
+TEST(SmartCtlOutputParserTest, parsesNvmeHealthOutput)
+{
+    const auto result = SmartCtlOutputParser::parse(
+        R"(
+            smartctl 7.5 2025-04-30 r5714 [x86_64-linux-6.18.16-1-lts] (local build)
+            Copyright (C) 2002-25, Bruce Allen, Christian Franke, www.smartmontools.org
+
+            === START OF INFORMATION SECTION ===
+            Model Number:                       WD_BLACK SN850X 4000GB
+            Serial Number:                      240258445614
+
+            === START OF SMART DATA SECTION ===
+            SMART overall-health self-assessment test result: PASSED
+
+            SMART/Health Information (NVMe Log 0x02, NSID 0xffffffff)
+            Critical Warning:                   0x00
+            Temperature:                        50 Celsius
+            Available Spare:                    100%
+            Available Spare Threshold:          10%
+            Percentage Used:                    0%
+            Data Units Read:                    104 824 560 [53,6 TB]
+            Data Units Written:                 80 482 532 [41,2 TB]
+            Host Read Commands:                 233 072 100
+            Host Write Commands:                781 541 720
+            Controller Busy Time:               864
+            Power Cycles:                       601
+            Power On Hours:                     4 542
+            Unsafe Shutdowns:                   74
+            Media and Data Integrity Errors:    0
+            Error Information Log Entries:      0
+            Warning  Comp. Temperature Time:    0
+            Critical Comp. Temperature Time:    0
+
+            Error Information (NVMe Log 0x01, 16 of 256 entries)
+            No Errors Logged
+        )"
+    );
+
+    ASSERT_EQ(17u, result.attributes.size());
+
+    // Check key fields by name
+    auto findByName = [&](const std::string& name) -> const SmartData::Attribute* {
+        for (const auto& a : result.attributes)
+            if (a.name == name) return &a;
+        return nullptr;
+    };
+
+    auto* critWarn = findByName("Critical_Warning");
+    ASSERT_NE(nullptr, critWarn);
+    EXPECT_EQ(0, critWarn->rawVal);
+
+    auto* temp = findByName("Temperature");
+    ASSERT_NE(nullptr, temp);
+    EXPECT_EQ(50, temp->rawVal);
+
+    auto* spare = findByName("Available_Spare");
+    ASSERT_NE(nullptr, spare);
+    EXPECT_EQ(100, spare->rawVal);
+    EXPECT_EQ(100, spare->value);
+    EXPECT_EQ(10, spare->threshold);  // threshold from Available Spare Threshold
+
+    auto* spareThresh = findByName("Available_Spare_Threshold");
+    ASSERT_NE(nullptr, spareThresh);
+    EXPECT_EQ(10, spareThresh->rawVal);
+
+    auto* pctUsed = findByName("Percentage_Used");
+    ASSERT_NE(nullptr, pctUsed);
+    EXPECT_EQ(0, pctUsed->rawVal);
+
+    auto* unitsRead = findByName("Data_Units_Read");
+    ASSERT_NE(nullptr, unitsRead);
+    EXPECT_EQ(104824560LL, unitsRead->rawVal);
+
+    auto* unitsWritten = findByName("Data_Units_Written");
+    ASSERT_NE(nullptr, unitsWritten);
+    EXPECT_EQ(80482532LL, unitsWritten->rawVal);
+
+    auto* powerCycles = findByName("Power_Cycles");
+    ASSERT_NE(nullptr, powerCycles);
+    EXPECT_EQ(601, powerCycles->rawVal);
+
+    auto* powerOnHours = findByName("Power_On_Hours");
+    ASSERT_NE(nullptr, powerOnHours);
+    EXPECT_EQ(4542, powerOnHours->rawVal);
+
+    auto* unsafeShut = findByName("Unsafe_Shutdowns");
+    ASSERT_NE(nullptr, unsafeShut);
+    EXPECT_EQ(74, unsafeShut->rawVal);
+
+    auto* mediaErrors = findByName("Media_and_Data_Integrity_Errors");
+    ASSERT_NE(nullptr, mediaErrors);
+    EXPECT_EQ(0, mediaErrors->rawVal);
+}
+
+TEST(SmartCtlOutputParserTest, nvmeWithOnlyHealthSection)
+{
+    const auto result = SmartCtlOutputParser::parse(
+        R"(
+            SMART/Health Information (NVMe Log 0x02, NSID 0xffffffff)
+            Critical Warning:                   0x00
+            Temperature:                        35 Celsius
+            Available Spare:                    85%
+            Available Spare Threshold:          5%
+            Percentage Used:                    12%
+        )"
+    );
+
+    ASSERT_EQ(5u, result.attributes.size());
+
+    auto findByName = [&](const std::string& name) -> const SmartData::Attribute* {
+        for (const auto& a : result.attributes)
+            if (a.name == name) return &a;
+        return nullptr;
+    };
+
+    auto* spare = findByName("Available_Spare");
+    ASSERT_NE(nullptr, spare);
+    EXPECT_EQ(85, spare->value);
+    EXPECT_EQ(5, spare->threshold);
+
+    auto* pctUsed = findByName("Percentage_Used");
+    ASSERT_NE(nullptr, pctUsed);
+    EXPECT_EQ(12, pctUsed->rawVal);
+}
