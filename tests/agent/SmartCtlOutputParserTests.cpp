@@ -126,3 +126,22 @@ TEST(SmartCtlOutputParserTest, fullOutput)
         std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::MultiZoneErrorRate,        SmartData::AttrData{200, 200, 0    } }
     ));
 }
+
+TEST(SmartCtlOutputParserTest, handlesLargeRawValuesAndMultiTokenFields)
+{
+    const auto result = SmartCtlOutputParser::parse(
+        R"(
+            Vendor Specific SMART Attributes with Thresholds:
+            ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+            165 Block_Erase_Count       0x0032   100   100   000    Old_age   Always       -       481240550006
+            194 Temperature_Celsius     0x0022   076   043   000    Old_age   Always       -       24 (Min/Max 16/49)
+            230 Media_Wearout_Indicator 0x0032   100   100   000    Old_age   Always       -       0x0523023c0523
+        )"
+    );
+
+    EXPECT_THAT(result.smartData, UnorderedElementsAre(
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{static_cast<SmartData::SmartAttribute>(165), SmartData::AttrData{100, 100, 481240550006LL}},
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{SmartData::Temperature,                      SmartData::AttrData{ 76,  43, 24           }},
+        std::pair<SmartData::SmartAttribute, SmartData::AttrData>{static_cast<SmartData::SmartAttribute>(230), SmartData::AttrData{100, 100, 0x0523023c0523LL}}
+    ));
+}
