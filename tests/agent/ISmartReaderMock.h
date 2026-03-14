@@ -9,4 +9,6 @@ class ISmartReaderMock : public ISmartReader
 public:
     MOCK_METHOD(SmartData, ReadSMARTData, (const Disk&), (override));
     MOCK_METHOD(GeneralHealth::Health, ReadDisksStatus, (const Disk&), (override));
+    MOCK_METHOD(std::string, ReadRawOutput, (const Disk&), (override));
+    MOCK_METHOD(SmartTestStatus, ReadTestStatus, (const Disk&), (override));
 };

@@ -128,6 +128,7 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 
 nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
 {
+    const auto rawOutput = m_reader->ReadRawOutput(disk);
     const auto smart = m_reader->ReadSMARTData(disk);
 
     nlohmann::json attrs = nlohmann::json::array();
@@ -143,5 +144,14 @@ nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
         });
     }
 
-    return nlohmann::json{{"type", "smart"}, {"attributes", attrs}};
+    auto j = nlohmann::json{{"type", "smart"}, {"attributes", attrs}};
+
+    const auto testStatus = m_reader->ReadTestStatus(disk);
+    j["selfTestStatus"] = {
+        {"running", testStatus.running},
+        {"percentRemaining", testStatus.percentRemaining},
+        {"lastResult", testStatus.lastResult}
+    };
+
+    return j;
 }

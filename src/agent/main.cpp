@@ -5,6 +5,7 @@
 #include <string>
 
 #include "common/constants.hpp"
+#include "common/DiskSummary.h"
 #include "HttpServer.h"
 #include "MdnsPublisher.h"
 #include "SystemUtilitiesFactory.h"
@@ -19,6 +20,60 @@ namespace
     {
         if (g_server)
             g_server->stop();
+    }
+
+    DiskSummary buildSummary(const Disk& disk, const std::vector<ProbeStatus>& probeStatuses)
+    {
+        DiskSummary summary;
+        summary.model = disk.GetModel();
+        summary.vendor = disk.GetVendor();
+        summary.capacityBytes = disk.GetCapacity();
+        summary.driveType = disk.GetDriveType();
+
+        // Extract temperature, power-on hours, and self-test status from SMART probe data
+        for (const auto& probe : probeStatuses)
+        {
+            if (!probe.rawData.contains("type") || probe.rawData["type"] != "smart")
+                continue;
+
+            if (probe.rawData.contains("attributes"))
+            {
+                for (const auto& attr : probe.rawData["attributes"])
+                {
+                    const auto& name = attr.value("name", std::string{});
+                    const auto id = attr.value("id", 0);
+
+                    // Temperature: ATA id 194 or 190, NVMe by name
+                    if (!summary.temperatureC &&
+                        (id == 194 || id == 190 || name == "Temperature" ||
+                         name == "Temperature_Celsius" || name == "Airflow_Temperature_Cel"))
+                    {
+                        summary.temperatureC = static_cast<int>(attr.value("rawVal", int64_t{0}));
+                    }
+
+                    // Power-On Hours: ATA id 9, NVMe by name
+                    if (!summary.powerOnHours &&
+                        (id == 9 || name == "Power_On_Hours"))
+                    {
+                        summary.powerOnHours = attr.value("rawVal", int64_t{0});
+                    }
+                }
+            }
+
+            if (probe.rawData.contains("selfTestStatus"))
+            {
+                const auto& st = probe.rawData["selfTestStatus"];
+                SmartTestStatus testStatus;
+                testStatus.running = st.value("running", false);
+                testStatus.percentRemaining = st.value("percentRemaining", 0);
+                testStatus.lastResult = st.value("lastResult", std::string{});
+                summary.selfTestStatus = testStatus;
+            }
+
+            break;  // only need the first SMART probe
+        }
+
+        return summary;
     }
 }
 
@@ -50,6 +105,7 @@ void collectAndPublish(HttpServer& server)
         info.SetName(disk.GetDeviceId());
         info.SetHealth(calc.CalculateDiskStatus(disk, probes));
         info.SetProbesStatuses(probeStatuses);
+        info.SetSummary(buildSummary(disk, probeStatuses));
         diskInfos.push_back(info);
     }
 
