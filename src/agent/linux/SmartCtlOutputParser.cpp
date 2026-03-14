@@ -93,12 +93,14 @@ namespace SmartCtlOutputParser
 
                     try
                     {
+                        const int threshVal = (thresh == "---") ? 0 : std::stoi(thresh);
+
                         smartData.attributes.push_back(SmartData::Attribute{
                             static_cast<uint8_t>(std::stoul(id)),
                             name,
                             std::stoi(value),
                             std::stoi(worst),
-                            std::stoi(thresh),
+                            threshVal,
                             std::stoll(rawValue, nullptr, 0)
                         });
                     }

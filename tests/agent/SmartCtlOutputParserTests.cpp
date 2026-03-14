@@ -145,3 +145,22 @@ TEST(SmartCtlOutputParserTest, handlesLargeRawValuesAndMultiTokenFields)
         SmartData::Attribute{230, "Media_Wearout_Indicator", 100, 100, 0, 0x0523023c0523LL}
     ));
 }
+
+TEST(SmartCtlOutputParserTest, handlesDashThresholdAsZero)
+{
+    const auto result = SmartCtlOutputParser::parse(
+        R"(
+            Vendor Specific SMART Attributes with Thresholds:
+            ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+              5 Reallocated_Sector_Ct   0x0032   100   100   ---    Old_age   Always       -       0
+              9 Power_On_Hours          0x0032   100   100   ---    Old_age   Always       -       12595
+            232 Available_Reservd_Space 0x0033   100   100   004    Pre-fail  Always       -       100
+        )"
+    );
+
+    EXPECT_THAT(result.attributes, UnorderedElementsAre(
+        SmartData::Attribute{  5, "Reallocated_Sector_Ct",   100, 100, 0, 0    },
+        SmartData::Attribute{  9, "Power_On_Hours",          100, 100, 0, 12595},
+        SmartData::Attribute{232, "Available_Reservd_Space", 100, 100, 4, 100  }
+    ));
+}
