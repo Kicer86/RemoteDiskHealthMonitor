@@ -213,9 +213,9 @@ Item {
                     }
 
                     // Disk summary info
-                    Flow {
+                    RowLayout {
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: 0
                         visible: diskPane.diskObj && diskPane.diskObj.summary !== undefined
 
                         property var s: diskPane.diskObj ? diskPane.diskObj.summary : null
@@ -229,9 +229,23 @@ Item {
 
                         Label {
                             visible: parent.s && parent.s.vendor !== ""
+                            text: "  ·  "
+                            font.pixelSize: 11
+                            opacity: 0.4
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.vendor !== ""
                             text: parent.s ? parent.s.vendor : ""
                             font.pixelSize: 11
                             opacity: 0.7
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.capacityBytes > 0
+                            text: "  ·  "
+                            font.pixelSize: 11
+                            opacity: 0.4
                         }
 
                         Label {
@@ -240,6 +254,8 @@ Item {
                             font.pixelSize: 11
                             opacity: 0.7
                         }
+
+                        Item { width: 8 }
 
                         Rectangle {
                             visible: parent.s && parent.s.driveType !== ""
@@ -252,6 +268,7 @@ Item {
                                     case "NVMe": return "#1565C0"
                                     case "SSD":  return "#2E7D32"
                                     case "HDD":  return "#795548"
+                                    case "USB":  return "#F57C00"
                                     default:     return "#9E9E9E"
                                 }
                             }
@@ -268,9 +285,23 @@ Item {
 
                         Label {
                             visible: parent.s && parent.s.temperatureC !== undefined
+                            text: "  ·  "
+                            font.pixelSize: 11
+                            opacity: 0.4
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.temperatureC !== undefined
                             text: parent.s && parent.s.temperatureC !== undefined ? parent.s.temperatureC + " °C" : ""
                             font.pixelSize: 11
                             opacity: 0.7
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.powerOnHours !== undefined
+                            text: "  ·  "
+                            font.pixelSize: 11
+                            opacity: 0.4
                         }
 
                         Label {
@@ -279,6 +310,8 @@ Item {
                             font.pixelSize: 11
                             opacity: 0.7
                         }
+
+                        Item { Layout.fillWidth: true }
                     }
 
                     // Probe details (expanded)

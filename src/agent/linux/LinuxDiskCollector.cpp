@@ -8,10 +8,25 @@
 
 namespace
 {
+    bool isRemovable(const std::string& name)
+    {
+        std::ifstream removableFile("/sys/block/" + name + "/removable");
+        if (removableFile.is_open())
+        {
+            int val = 0;
+            removableFile >> val;
+            return val == 1;
+        }
+        return false;
+    }
+
     std::string detectDriveType(const std::string& name)
     {
         if (name.find("nvme") == 0)
             return "NVMe";
+
+        if (isRemovable(name))
+            return "USB";
 
         std::ifstream rotFile("/sys/block/" + name + "/queue/rotational");
         if (rotFile.is_open())
