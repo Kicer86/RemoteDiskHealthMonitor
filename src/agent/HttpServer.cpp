@@ -7,12 +7,25 @@
 #include "common/constants.hpp"
 
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <list>
 #include <condition_variable>
 #include <sstream>
 #include <thread>
+
+
+namespace
+{
+    bool isValidDiskName(const std::string& name)
+    {
+        return !name.empty() && name.size() <= 64 &&
+               std::all_of(name.begin(), name.end(), [](char c) {
+                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
+               });
+    }
+}
 
 
 struct HttpServer::Impl
@@ -111,6 +124,14 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
     // GET /api/v1/disks/:name
     m_impl->server.Get("/api/v1/disks/:name", [this](const httplib::Request& req, httplib::Response& res) {
         const auto& name = req.path_params.at("name");
+
+        if (!isValidDiskName(name))
+        {
+            res.status = 400;
+            res.set_content(R"({"error":"invalid disk name"})", "application/json");
+            return;
+        }
+
         std::lock_guard lock(m_impl->dataMutex);
 
         for (const auto& d : m_impl->disks)
