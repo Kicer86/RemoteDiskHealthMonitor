@@ -19,6 +19,7 @@ AgentsList::AgentsList(IAgentsStatusProvider& statusProvider, QObject* p)
     connect(&m_statusProvider, &IAgentsStatusProvider::statusChanged, this, &AgentsList::updateAgentHealth);
     connect(&m_statusProvider, &IAgentsStatusProvider::diskCollectionChanged, this, &AgentsList::updateAgentDiskInfoCollection);
     connect(&m_statusProvider, &IAgentsStatusProvider::connectionStateChanged, this, &AgentsList::updateConnectionState);
+    connect(&m_statusProvider, &IAgentsStatusProvider::lastRefreshedChanged, this, &AgentsList::updateLastRefreshed);
 }
 
 
@@ -60,6 +61,7 @@ void AgentsList::removeAgentAt(int position)
     m_health.remove(info);
     m_diskInfoCollection.remove(info);
     m_connectionStates.remove(info);
+    m_lastRefreshed.remove(info);
     endRemoveRows();
 
     m_statusProvider.unobserve(info);
@@ -125,6 +127,26 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                     diskJson["name"] = disk.GetName();
                     diskJson["health"] = disk.GetHealth();
 
+                    const auto& summary = disk.GetSummary();
+                    nlohmann::json summaryJson;
+                    summaryJson["model"] = summary.model;
+                    summaryJson["vendor"] = summary.vendor;
+                    summaryJson["capacityBytes"] = summary.capacityBytes;
+                    summaryJson["driveType"] = summary.driveType;
+                    if (summary.temperatureC)
+                        summaryJson["temperatureC"] = *summary.temperatureC;
+                    if (summary.powerOnHours)
+                        summaryJson["powerOnHours"] = *summary.powerOnHours;
+                    if (summary.selfTestStatus)
+                    {
+                        summaryJson["selfTestStatus"] = {
+                            {"running", summary.selfTestStatus->running},
+                            {"percentRemaining", summary.selfTestStatus->percentRemaining},
+                            {"lastResult", summary.selfTestStatus->lastResult}
+                        };
+                    }
+                    diskJson["summary"] = summaryJson;
+
                     nlohmann::json probesJson = nlohmann::json::array();
                     for (const auto& probe : disk.GetProbesStatuses())
                     {
@@ -157,6 +179,11 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                 ? static_cast<int>(ConnectionState::Disconnected)
                 : static_cast<int>(it.value());
         }
+        else if (role == AgentLastRefreshedRole)
+        {
+            auto it = m_lastRefreshed.find(m_agents[row]);
+            result = it == m_lastRefreshed.end() ? QString() : it.value();
+        }
     }
 
     return result;
@@ -174,6 +201,7 @@ QHash<int, QByteArray> AgentsList::roleNames() const
     existingRoles.insert(AgentHostRole, "agentHost");
     existingRoles.insert(AgentPortRole, "agentPort");
     existingRoles.insert(AgentConnectionStateRole, "agentConnectionState");
+    existingRoles.insert(AgentLastRefreshedRole, "agentLastRefreshed");
 
 
     return existingRoles;
@@ -223,5 +251,20 @@ void AgentsList::updateConnectionState(const AgentInformation& info, ConnectionS
         const QModelIndex idx = index(pos, 0);
 
         emit dataChanged(idx, idx, {AgentConnectionStateRole});
+    }
+}
+
+void AgentsList::updateLastRefreshed(const AgentInformation& info, const QString& timestamp)
+{
+    auto it = std::find(m_agents.begin(), m_agents.end(), info);
+
+    if (it != m_agents.end())
+    {
+        m_lastRefreshed[info] = timestamp;
+
+        const int pos = std::distance(m_agents.begin(), it);
+        const QModelIndex idx = index(pos, 0);
+
+        emit dataChanged(idx, idx, {AgentLastRefreshedRole});
     }
 }
