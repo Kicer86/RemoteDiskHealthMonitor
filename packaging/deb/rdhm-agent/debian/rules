@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DBUILD_MONITOR=OFF \
+		-DBUILD_AGENT=ON \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr
+
+override_dh_auto_build:
+	dh_auto_build -- agent
+
+override_dh_auto_test:
+	# Tests require build infrastructure not available during packaging
+	:
+
+override_dh_auto_install:
+	dh_auto_install
+	install -Dm644 $(CURDIR)/packaging/systemd/rdhm-agent.service \
+		$(CURDIR)/debian/rdhm-agent/lib/systemd/system/rdhm-agent.service
+	install -Dm644 $(CURDIR)/packaging/conf/agent.conf \
+		$(CURDIR)/debian/rdhm-agent/etc/rdhm/agent.conf

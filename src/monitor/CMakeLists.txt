@@ -61,3 +61,8 @@ target_include_directories(monitor
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
 )
+
+set_target_properties(monitor PROPERTIES OUTPUT_NAME rdhm-monitor)
+
+include(GNUInstallDirs)
+install(TARGETS monitor RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

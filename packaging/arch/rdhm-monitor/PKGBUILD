@@ -1,0 +1,26 @@
+# Maintainer: Wojciech Kucjas <wojciech.kucjas@gmail.com>
+# Maintainer: Michał Walenciak <michalwalenciak@gmail.com>
+pkgname=rdhm-monitor
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='Remote Disc Health Monitor - Monitor GUI'
+arch=('x86_64')
+license=('GPL-3.0-or-later')
+url='https://github.com/user/hdd-monitor'
+depends=('qt6-declarative' 'qt6-quickcontrols2' 'avahi')
+makedepends=('cmake' 'gcc' 'qt6-base' 'qt6-declarative' 'avahi')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cmake -B build -S "$pkgname-$pkgver" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_AGENT=OFF \
+        -DBUILD_MONITOR=ON
+    cmake --build build --target monitor
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}

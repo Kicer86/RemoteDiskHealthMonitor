@@ -1,11 +1,14 @@
 
 cmake_policy(SET CMP0048 NEW)
 cmake_minimum_required(VERSION 3.16)
-project(RemoteDiscHealthMonitor)
+project(RemoteDiscHealthMonitor VERSION 0.2.0)
 
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_STANDARD 20)
+
+option(BUILD_AGENT   "Build the agent component"   ON)
+option(BUILD_MONITOR "Build the monitor component" ON)
 
 if(MSVC)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)      # when msvc, build gtest with shared crt library
@@ -19,10 +22,20 @@ enable_testing()
 
 #external projects
 add_subdirectory(external/googletest)
-add_subdirectory(external/QtZeroConf)
+
+if(BUILD_MONITOR)
+    add_subdirectory(external/QtZeroConf)
+endif()
 #
 
 add_subdirectory(src/common)
-add_subdirectory(src/agent)
-add_subdirectory(src/monitor)
+
+if(BUILD_AGENT)
+    add_subdirectory(src/agent)
+endif()
+
+if(BUILD_MONITOR)
+    add_subdirectory(src/monitor)
+endif()
+
 add_subdirectory(tests)

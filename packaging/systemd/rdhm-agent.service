@@ -1,0 +1,14 @@
+[Unit]
+Description=Remote Disc Health Monitor Agent
+Documentation=https://github.com/user/hdd-monitor
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/rdhm/agent.conf
+ExecStart=/usr/sbin/rdhm-agent -n ${AGENT_NAME}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

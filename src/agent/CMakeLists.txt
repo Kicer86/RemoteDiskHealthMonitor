@@ -110,3 +110,8 @@ elseif(APPLE)
 else()
     message(FATAL_ERROR "Unsupported system")
 endif()
+
+set_target_properties(agent PROPERTIES OUTPUT_NAME rdhm-agent)
+
+include(GNUInstallDirs)
+install(TARGETS agent RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
