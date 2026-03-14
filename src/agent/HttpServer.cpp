@@ -7,8 +7,11 @@
 #include "common/constants.hpp"
 
 #include <atomic>
+#include <chrono>
+#include <iomanip>
 #include <list>
 #include <condition_variable>
+#include <sstream>
 #include <thread>
 
 
@@ -21,6 +24,7 @@ struct HttpServer::Impl
     std::mutex dataMutex;
     GeneralHealth::Health overallHealth = GeneralHealth::UNKNOWN;
     std::vector<DiskInfo> disks;
+    std::string lastRefreshed;
 
     std::function<void()> refreshCallback;
 
@@ -41,7 +45,8 @@ struct HttpServer::Impl
         std::lock_guard lock(dataMutex);
         return nlohmann::json{
             {"overallHealth", overallHealth},
-            {"disks", disks}
+            {"disks", disks},
+            {"lastRefreshed", lastRefreshed}
         };
     }
 
@@ -173,6 +178,12 @@ void HttpServer::setStatusData(GeneralHealth::Health overallHealth, std::vector<
         std::lock_guard lock(m_impl->dataMutex);
         m_impl->overallHealth = overallHealth;
         m_impl->disks = std::move(disks);
+
+        const auto now = std::chrono::system_clock::now();
+        const auto time_t = std::chrono::system_clock::to_time_t(now);
+        std::ostringstream oss;
+        oss << std::put_time(std::gmtime(&time_t), "%Y-%m-%dT%H:%M:%SZ");
+        m_impl->lastRefreshed = oss.str();
     }
 
     // Push SSE event
