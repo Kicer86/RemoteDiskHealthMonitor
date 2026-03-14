@@ -27,12 +27,12 @@ const std::string& DiskInfo::GetName() const
     return m_name;
 };
 
-void DiskInfo:: SetHealth(const GeneralHealth::Health& _health)
+void DiskInfo::SetHealth(const GeneralHealth::Health& _health)
 {
     m_health = _health;
 }
 
-GeneralHealth::Health DiskInfo:: GetHealth() const
+GeneralHealth::Health DiskInfo::GetHealth() const
 {
     return m_health;
 }
