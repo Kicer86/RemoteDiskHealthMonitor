@@ -130,28 +130,10 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                     {
                         nlohmann::json probeJson;
                         probeJson["health"] = probe.health;
-
-                        if (std::holds_alternative<SmartData>(probe.rawData))
-                        {
-                            const auto& smart = std::get<SmartData>(probe.rawData);
-                            probeJson["type"] = "smart";
-                            nlohmann::json attrs = nlohmann::json::array();
-                            for (const auto& [attr, data] : smart.smartData)
-                            {
-                                attrs.push_back({
-                                    {"name", SmartData::GetAttrTypeName(attr)},
-                                    {"value", data.value},
-                                    {"worst", data.worst},
-                                    {"rawVal", data.rawVal}
-                                });
-                            }
-                            probeJson["attributes"] = attrs;
-                        }
+                        if (probe.rawData.is_object())
+                            probeJson.update(probe.rawData);
                         else
-                        {
-                            probeJson["type"] = "text";
-                            probeJson["text"] = std::get<std::string>(probe.rawData);
-                        }
+                            probeJson["rawData"] = probe.rawData;
                         probesJson.push_back(probeJson);
                     }
                     diskJson["probes"] = probesJson;

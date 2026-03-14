@@ -4,8 +4,6 @@ add_library(common OBJECT
     GeneralHealth.h
     ProbeStatus.h
     ProtocolVersion.h
-    OutputParsersUtils.cpp
-    OutputParsersUtils.h
     SmartData.cpp
     SmartData.h
     GeneralHealth.cpp

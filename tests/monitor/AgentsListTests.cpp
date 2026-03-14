@@ -317,7 +317,7 @@ TEST(AgentsListTest, diskInfoDataReturnsJsonStrings)
     // Create disk with a text probe
     ProbeStatus textProbe;
     textProbe.health = GeneralHealth::GOOD;
-    textProbe.rawData = std::string("dmesg output");
+    textProbe.rawData = nlohmann::json{{"type", "text"}, {"value", "dmesg output"}};
 
     DiskInfo disk("sda", GeneralHealth::GOOD, {textProbe});
     emit statusProvider.diskCollectionChanged(info, {disk});

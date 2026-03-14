@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "GeneralHealth.h"
-#include "SmartData.h"
 #include "ProbeStatus.h"
 
 class DiskInfo
@@ -22,7 +21,7 @@ public:
 	GeneralHealth::Health GetHealth() const;
     const std::vector<ProbeStatus>& GetProbesStatuses() const;
 
-	auto operator<=>(const DiskInfo& _other) const = default;
+	bool operator==(const DiskInfo& _other) const = default;
 
 private:
 	std::string m_name;

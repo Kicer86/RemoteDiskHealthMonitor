@@ -5,5 +5,5 @@ class SmartReader : public ISmartReader
 {
 public:
 	SmartData ReadSMARTData(const Disk & _disk) override;
-	GeneralHealth ReadDisksStatus(const Disk & _disk) override;
+	GeneralHealth::Health ReadDisksStatus(const Disk & _disk) override;
 };

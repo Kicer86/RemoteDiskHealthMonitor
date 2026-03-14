@@ -4,26 +4,18 @@
 #include <QProcess>
 #include <algorithm>
 
-GeneralHealth CMDCommunication::CollectDiskStatus(const Disk& _disk)
+GeneralHealth::Health CMDCommunication::CollectDiskStatus(const Disk& _disk)
 {
     const std::string commandResult = ExecuteDiscStatusCommand(_disk);
 
-    m_generalHealth.SetStatus(GeneralHealth::UNKNOWN);
-
     if (commandResult == "OK")
-    {
-        m_generalHealth.SetStatus(GeneralHealth::GOOD);
-    }
+        return GeneralHealth::GOOD;
     else if (commandResult == "Degraded")
-    {
-        m_generalHealth.SetStatus(GeneralHealth::CHECK_STATUS);
-    }
+        return GeneralHealth::CHECK_STATUS;
     else if (commandResult == "PredFail")
-    {
-        m_generalHealth.SetStatus(GeneralHealth::BAD);
-    }
+        return GeneralHealth::BAD;
 
-    return m_generalHealth;
+    return GeneralHealth::UNKNOWN;
 }
 
 bool CMDCommunication::CompareDeviceIdWithInstanceName(const Disk& _disk, std::string _instanceName)
@@ -50,7 +42,7 @@ std::string CMDCommunication::ExecuteDiscStatusCommand(const Disk& _disk) const
     auto output = proc.readAllStandardOutput();
 
     std::string ret = output.toStdString();
-    
+
     auto diskPos = ret.find(_disk.GetDeviceId());
     auto statusPosStart = ret.find_first_not_of(' ', diskPos + (_disk.GetDeviceId()).size());
     auto statusPosStop = ret.find_first_of(' ', statusPosStart);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <map>
 #include <string>
 
@@ -76,7 +77,7 @@ public:
     {
         int value;
         int worst;
-        int rawVal;
+        int64_t rawVal;
 
         auto operator<=>(const AttrData &) const = default;
     };

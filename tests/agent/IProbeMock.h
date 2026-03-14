@@ -8,5 +8,5 @@ class IProbeMock : public IProbe
 {
 public:
     MOCK_METHOD(GeneralHealth::Health, GetStatus, (const Disk&), (override));
-    MOCK_METHOD(RawData, GetRawData, (const Disk&), (override));
+    MOCK_METHOD(nlohmann::json, GetRawData, (const Disk&), (override));
 };

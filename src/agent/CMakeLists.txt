@@ -8,6 +8,8 @@ ADD_EXECUTABLE( agent
     HttpServer.cpp
     MdnsPublisher.h
     MdnsPublisher.cpp
+    OutputParsersUtils.h
+    OutputParsersUtils.cpp
 
     DiscStatusCalculator.h
     DiscStatusCalculator.cpp

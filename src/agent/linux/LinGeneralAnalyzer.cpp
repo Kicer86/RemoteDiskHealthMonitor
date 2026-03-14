@@ -24,7 +24,7 @@ GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-IProbe::RawData LinGeneralAnalyzer::GetRawData(const Disk& disk)
+nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
 {
     std::string result;
 
@@ -43,7 +43,7 @@ IProbe::RawData LinGeneralAnalyzer::GetRawData(const Disk& disk)
         result = oss.str();
     }
 
-    return result;
+    return nlohmann::json{{"type", "text"}, {"value", result}};
 }
 
 
