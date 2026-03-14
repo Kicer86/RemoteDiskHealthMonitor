@@ -100,7 +100,8 @@ TEST(AgentsListTest, listofAvailableRoles)
     for(auto it = roles.begin(); it != roles.end(); ++it)
         listOfRoles.append(it.value());
 
-    EXPECT_THAT(listOfRoles, IsSupersetOf( {"agentName", "agentHealth", "agentDetectionType"} ));
+    EXPECT_THAT(listOfRoles, IsSupersetOf( {"agentName", "agentHealth", "agentDetectionType",
+                                           "agentHost", "agentPort", "agentConnectionState"} ));
 }
 
 
@@ -245,6 +246,88 @@ TEST(AgentsListTest, healthUpdatesAfterFetch)
 
     EXPECT_EQ(idx1.data(AgentsList::AgentHealthRole), GeneralHealth::GOOD);
     EXPECT_EQ(idx2.data(AgentsList::AgentHealthRole), GeneralHealth::BAD);
+}
+
+
+TEST(AgentsListTest, exposesHostAndPort)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    const auto idx = aal.index(0, 0);
+    EXPECT_EQ(idx.data(AgentsList::AgentHostRole).toString(), "10.0.0.5");
+    EXPECT_EQ(idx.data(AgentsList::AgentPortRole).toInt(), 1630);
+}
+
+
+TEST(AgentsListTest, connectionStateUpdates)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    const auto idx = aal.index(0, 0);
+
+    // Default state should be Disconnected
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Disconnected));
+
+    // Update to Connected
+    emit statusProvider.connectionStateChanged(info, ConnectionState::Connected);
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Connected));
+
+    // Update to Error
+    emit statusProvider.connectionStateChanged(info, ConnectionState::Error);
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Error));
+}
+
+
+TEST(AgentsListTest, unobserveCalledOnAgentRemoval)
+{
+    IAgentsStatusProviderMock statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("TestAgent", QHostAddress("192.168.1.1"), 1630, AgentInformation::DetectionSource::Hardcoded);
+
+    EXPECT_CALL(statusProvider, observe(info)).Times(1);
+    aal.addAgent(info);
+
+    EXPECT_CALL(statusProvider, unobserve(info)).Times(1);
+    aal.removeAgent(info);
+
+    ASSERT_EQ(aal.rowCount({}), 0);
+}
+
+
+TEST(AgentsListTest, diskInfoDataReturnsJsonStrings)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    // Create disk with a text probe
+    ProbeStatus textProbe;
+    textProbe.health = GeneralHealth::GOOD;
+    textProbe.rawData = std::string("dmesg output");
+
+    DiskInfo disk("sda", GeneralHealth::GOOD, {textProbe});
+    emit statusProvider.diskCollectionChanged(info, {disk});
+
+    const auto idx = aal.index(0, 0);
+    QStringList data = idx.data(AgentsList::AgentDiskInfoDataRole).toStringList();
+
+    ASSERT_EQ(data.size(), 1);
+    // Should be valid JSON, not CSV
+    EXPECT_TRUE(data[0].startsWith("{"));
 }
 
 

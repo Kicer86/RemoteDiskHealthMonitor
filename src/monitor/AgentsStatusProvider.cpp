@@ -7,6 +7,7 @@
 
 #include "AgentsStatusProvider.hpp"
 #include "common/JsonSerialize.h"
+#include "common/constants.hpp"
 
 
 AgentsStatusProvider::AgentsStatusProvider(QObject* parent)
@@ -27,8 +28,29 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
 }
 
 
+void AgentsStatusProvider::unobserve(const AgentInformation& info)
+{
+    auto it = m_connections.find(info);
+    if (it == m_connections.end())
+        return;
+
+    QNetworkReply* reply = it->sseReply;
+    it->sseReply = nullptr;
+    m_connections.erase(it);
+
+    if (reply)
+    {
+        reply->disconnect(this);
+        reply->abort();
+        reply->deleteLater();
+    }
+}
+
+
 void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
 {
+    emit connectionStateChanged(info, ConnectionState::Connecting);
+
     const QUrl url = QStringLiteral("http://%1:%2/api/v1/refresh")
                          .arg(info.host().toString())
                          .arg(info.port());
@@ -43,14 +65,52 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
         if (reply->error() == QNetworkReply::NoError)
         {
             parseStatusJson(info, reply->readAll());
+            emit connectionStateChanged(info, ConnectionState::Connected);
         }
         else
         {
             std::cerr << "Failed to fetch status from " << info.name().toStdString()
                       << ": " << reply->errorString().toStdString() << "\n";
+            emit connectionStateChanged(info, ConnectionState::Error);
         }
 
         connectSse(info);
+        fetchAgentInfo(info);
+    });
+}
+
+
+void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
+{
+    const QUrl url = QStringLiteral("http://%1:%2/api/v1/info")
+                         .arg(info.host().toString())
+                         .arg(info.port());
+
+    QNetworkRequest req(url);
+    QNetworkReply* reply = m_nam.get(req);
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, info, reply]() {
+        reply->deleteLater();
+
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            try
+            {
+                nlohmann::json j = nlohmann::json::parse(reply->readAll().toStdString());
+                if (j.contains("protocol"))
+                {
+                    const int agentVersion = j.at("protocol").get<int>();
+                    const int monitorVersion = static_cast<int>(VersionOfProtocol);
+                    if (agentVersion != monitorVersion)
+                        emit protocolMismatch(info, agentVersion, monitorVersion);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Failed to parse agent info from " << info.name().toStdString()
+                          << ": " << e.what() << "\n";
+            }
+        }
     });
 }
 
@@ -74,20 +134,39 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
     it->sseBuffer.clear();
 
     QObject::connect(sseReply, &QNetworkReply::readyRead, this, [this, info]() {
+        auto it = m_connections.find(info);
+        if (it != m_connections.end())
+            it->reconnectDelayMs = 1000;   // reset backoff on successful data
+
+        emit connectionStateChanged(info, ConnectionState::Connected);
         processSseData(info);
     });
 
     QObject::connect(sseReply, &QNetworkReply::finished, this, [this, info, sseReply]() {
         sseReply->deleteLater();
-        // Reconnect SSE on disconnect
         auto it = m_connections.find(info);
         if (it != m_connections.end())
         {
             it->sseReply = nullptr;
-            // Delayed reconnect
-            QMetaObject::invokeMethod(this, [this, info]() { connectSse(info); },
-                                      Qt::QueuedConnection);
+            emit connectionStateChanged(info, ConnectionState::Disconnected);
+            scheduleSseReconnect(info);
         }
+    });
+}
+
+
+void AgentsStatusProvider::scheduleSseReconnect(const AgentInformation& info)
+{
+    auto it = m_connections.find(info);
+    if (it == m_connections.end())
+        return;
+
+    const int delay = it->reconnectDelayMs;
+    it->reconnectDelayMs = std::min(it->reconnectDelayMs * 2, MaxReconnectDelayMs);
+
+    QTimer::singleShot(delay, this, [this, info]() {
+        if (m_connections.contains(info))
+            connectSse(info);
     });
 }
 

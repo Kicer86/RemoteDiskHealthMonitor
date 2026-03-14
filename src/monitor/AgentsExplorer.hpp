@@ -1,6 +1,5 @@
 
-#ifndef AGENTSENUMERATOR_HPP
-#define AGENTSENUMERATOR_HPP
+#pragma once
 
 #include <QObject>
 
@@ -27,5 +26,3 @@ private:
     void newAgent(const QZeroConfService &);
     void lostAgent(const QZeroConfService &);
 };
-
-#endif

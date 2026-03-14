@@ -3,6 +3,8 @@
 #include <iterator>
 #include <QDebug>
 
+#include <nlohmann/json.hpp>
+
 #include "AgentsList.hpp"
 
 
@@ -16,6 +18,7 @@ AgentsList::AgentsList(IAgentsStatusProvider& statusProvider, QObject* p)
 {
     connect(&m_statusProvider, &IAgentsStatusProvider::statusChanged, this, &AgentsList::updateAgentHealth);
     connect(&m_statusProvider, &IAgentsStatusProvider::diskCollectionChanged, this, &AgentsList::updateAgentDiskInfoCollection);
+    connect(&m_statusProvider, &IAgentsStatusProvider::connectionStateChanged, this, &AgentsList::updateConnectionState);
 }
 
 
@@ -55,7 +58,11 @@ void AgentsList::removeAgentAt(int position)
     beginRemoveRows({}, position, position);
     m_agents.removeAt(position);
     m_health.remove(info);
+    m_diskInfoCollection.remove(info);
+    m_connectionStates.remove(info);
     endRemoveRows();
+
+    m_statusProvider.unobserve(info);
 }
 
 
@@ -107,37 +114,66 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
         }
         else if (role == AgentDiskInfoDataRole)
         {
-            QStringList names;
+            QStringList diskJsonList;
             auto it = m_diskInfoCollection.find(m_agents[row]);
             if (it != m_diskInfoCollection.end())
             {
-                auto diskInfoVec = it.value();
-                for (auto& i : diskInfoVec)
+                const auto& diskInfoVec = it.value();
+                for (const auto& disk : diskInfoVec)
                 {
-                    std::vector<ProbeStatus> statuses = i.GetProbesStatuses();
+                    nlohmann::json diskJson;
+                    diskJson["name"] = disk.GetName();
+                    diskJson["health"] = disk.GetHealth();
 
-                    ProbeStatus status = statuses[1];
+                    nlohmann::json probesJson = nlohmann::json::array();
+                    for (const auto& probe : disk.GetProbesStatuses())
+                    {
+                        nlohmann::json probeJson;
+                        probeJson["health"] = probe.health;
 
-                    SmartData sData = std::get<SmartData>(status.rawData);
-
-                    QString item;
-
-                    auto data = sData.smartData;
-                        for (const auto& i : data)
+                        if (std::holds_alternative<SmartData>(probe.rawData))
                         {
-                            item += QString::fromStdString(SmartData::GetAttrTypeName(i.first));
-                            item += ",";
-                            item += QString::number(i.second.value);
-                            item += ",";
-                            item += QString::number(i.second.worst);
-                            item += ",";
-                            item += QString::number(i.second.rawVal);
-                            item += ";";
+                            const auto& smart = std::get<SmartData>(probe.rawData);
+                            probeJson["type"] = "smart";
+                            nlohmann::json attrs = nlohmann::json::array();
+                            for (const auto& [attr, data] : smart.smartData)
+                            {
+                                attrs.push_back({
+                                    {"name", SmartData::GetAttrTypeName(attr)},
+                                    {"value", data.value},
+                                    {"worst", data.worst},
+                                    {"rawVal", data.rawVal}
+                                });
+                            }
+                            probeJson["attributes"] = attrs;
                         }
-                    names.append(item);
+                        else
+                        {
+                            probeJson["type"] = "text";
+                            probeJson["text"] = std::get<std::string>(probe.rawData);
+                        }
+                        probesJson.push_back(probeJson);
+                    }
+                    diskJson["probes"] = probesJson;
+                    diskJsonList.append(QString::fromStdString(diskJson.dump()));
                 }
             }
-            result = names;
+            result = diskJsonList;
+        }
+        else if (role == AgentHostRole)
+        {
+            result = m_agents[row].host().toString();
+        }
+        else if (role == AgentPortRole)
+        {
+            result = m_agents[row].port();
+        }
+        else if (role == AgentConnectionStateRole)
+        {
+            auto it = m_connectionStates.find(m_agents[row]);
+            result = it == m_connectionStates.end()
+                ? static_cast<int>(ConnectionState::Disconnected)
+                : static_cast<int>(it.value());
         }
     }
 
@@ -153,6 +189,9 @@ QHash<int, QByteArray> AgentsList::roleNames() const
     existingRoles.insert(AgentDetectionTypeRole, "agentDetectionType");
     existingRoles.insert(AgentDiskInfoNamesRole, "agentDiskInfoNames");
     existingRoles.insert(AgentDiskInfoDataRole, "agentDiskInfoData");
+    existingRoles.insert(AgentHostRole, "agentHost");
+    existingRoles.insert(AgentPortRole, "agentPort");
+    existingRoles.insert(AgentConnectionStateRole, "agentConnectionState");
 
 
     return existingRoles;
@@ -187,5 +226,20 @@ void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, co
 
         emit dataChanged(idx, idx, { AgentDiskInfoNamesRole });
         emit dataChanged(idx, idx, { AgentDiskInfoDataRole });
+    }
+}
+
+void AgentsList::updateConnectionState(const AgentInformation& info, ConnectionState state)
+{
+    auto it = std::find(m_agents.begin(), m_agents.end(), info);
+
+    if (it != m_agents.end())
+    {
+        m_connectionStates[info] = state;
+
+        const int pos = std::distance(m_agents.begin(), it);
+        const QModelIndex idx = index(pos, 0);
+
+        emit dataChanged(idx, idx, {AgentConnectionStateRole});
     }
 }

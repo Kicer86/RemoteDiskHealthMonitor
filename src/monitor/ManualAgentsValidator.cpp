@@ -4,18 +4,42 @@
 
 void ManualAgentsValidator::addNewAgent(const QString& name, const QString& ip, const QString& port)
 {
-    const auto segments = ip.split('.');
-    const bool ipValid = std::all_of(segments.begin(), segments.end(), [](const QString& segment) {
-        const int number = segment.toInt();
-        return number >= 0 && number <= 255;
-    });
-
-    const int portNum = port.toInt();
-
-    if (ipValid && portNum >= 0 && portNum <= 65535)
+    if (name.trimmed().isEmpty())
     {
-        const AgentInformation info(name, QHostAddress(ip), portNum, AgentInformation::DetectionSource::Hardcoded);
-
-        emit agentDiscovered(info);
+        emit validationFailed(tr("Agent name cannot be empty"));
+        return;
     }
+
+    const auto segments = ip.split('.');
+    bool ipValid = segments.size() == 4;
+    if (ipValid)
+    {
+        for (const auto& segment : segments)
+        {
+            bool ok = false;
+            const int number = segment.toInt(&ok);
+            if (!ok || number < 0 || number > 255)
+            {
+                ipValid = false;
+                break;
+            }
+        }
+    }
+
+    if (!ipValid)
+    {
+        emit validationFailed(tr("Invalid IP address"));
+        return;
+    }
+
+    bool portOk = false;
+    const int portNum = port.toInt(&portOk);
+    if (!portOk || portNum < 1 || portNum > 65535)
+    {
+        emit validationFailed(tr("Port must be between 1 and 65535"));
+        return;
+    }
+
+    const AgentInformation info(name.trimmed(), QHostAddress(ip), portNum, AgentInformation::DetectionSource::Hardcoded);
+    emit agentDiscovered(info);
 }
