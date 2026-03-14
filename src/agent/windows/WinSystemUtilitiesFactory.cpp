@@ -3,7 +3,8 @@
 #include "WinDiskCollector.h"
 #include "agent/IProbe.h"
 #include "WinGeneralAnalyzer.h"
-#include "WinSmartAnalyzer.h"
+#include "../SmartHealthAnalyzer.h"
+#include "../SmartReader.h"
 
 
 struct SystemUtilitiesFactory::State {};
@@ -30,7 +31,7 @@ std::vector<std::unique_ptr<IProbe>> SystemUtilitiesFactory::getProbes()
 {
     std::vector<std::unique_ptr<IProbe>> probes;
     probes.emplace_back(std::make_unique<WinGeneralAnalyzer>());
-    probes.emplace_back(std::make_unique<WinSmartAnalyzer>());
+    probes.emplace_back(std::make_unique<SmartHealthAnalyzer>(std::make_unique<SmartReader>()));
 
     return probes;
 }

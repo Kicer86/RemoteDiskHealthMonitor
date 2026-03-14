@@ -4,14 +4,17 @@ add_executable(agentTests
     DmesgParserTests.cpp
     LsblkOutputParserTests.cpp
     SmartCtlOutputParserTests.cpp
+    SmartHealthAnalyzerTests.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/Disk.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/DiscStatusCalculator.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/OutputParsersUtils.cpp
+    ${PROJECT_SOURCE_DIR}/src/agent/SmartHealthAnalyzer.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/DmesgParser.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/LsblkOutputParser.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/SmartCtlOutputParser.cpp
     IPartitionsManagerMock.h
     IProbeMock.h
+    ISmartReaderMock.h
     DiskMock.h)
 
 target_include_directories(agentTests

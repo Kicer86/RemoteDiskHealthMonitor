@@ -5,7 +5,8 @@
 #include "../SystemUtilitiesFactory.h"
 #include "LinuxDiskCollector.h"
 #include "LinGeneralAnalyzer.h"
-#include "LinSmartAnalyzer.h"
+#include "../SmartHealthAnalyzer.h"
+#include "../SmartReader.h"
 #include "LsblkOutputParser.h"
 
 
@@ -78,7 +79,7 @@ std::vector<std::unique_ptr<IProbe>> SystemUtilitiesFactory::getProbes()
 {
     std::vector<std::unique_ptr<IProbe>> probes;
     probes.emplace_back(std::make_unique<LinGeneralAnalyzer>(m_state->m_diskCollector));
-    probes.emplace_back(std::make_unique<LinSmartAnalyzer>());
+    probes.emplace_back(std::make_unique<SmartHealthAnalyzer>(std::make_unique<SmartReader>()));
 
     return probes;
 }
