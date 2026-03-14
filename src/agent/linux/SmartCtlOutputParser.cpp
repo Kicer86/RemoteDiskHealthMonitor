@@ -229,22 +229,20 @@ namespace SmartCtlOutputParser
 
                 int64_t rawVal = parseNvmeValue(val);
 
-                // For Available_Spare / Available_Spare_Threshold, set value/threshold
-                // so the existing health analyzer can use threshold-based checks.
+                // For Available_Spare, set value so the existing health analyzer
+                // can use threshold-based checks. The threshold is applied
+                // in post-processing from the Available_Spare_Threshold entry.
                 int value = 0;
-                int threshold = 0;
 
                 if (key == "Available Spare")
                     value = static_cast<int>(rawVal);
-                else if (key == "Available Spare Threshold")
-                    threshold = static_cast<int>(rawVal);
 
                 smartData.attributes.push_back(SmartData::Attribute{
                     nextId++,
                     name,
                     value,
                     value,  // worst = value (no historical worst for NVMe)
-                    threshold,
+                    0,
                     rawVal
                 });
             }
