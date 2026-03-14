@@ -5,8 +5,7 @@
 #include <map>
 #include <memory>
 #include <set>
-#include <QByteArray>
-#include <QString>
+#include <string>
 
 #include <agent/Disk.h>
 
@@ -16,7 +15,7 @@ class IPartitionsManager;
 
 namespace DmesgParser
 {
-    std::map<Disk, std::set<QString>> parse(const QByteArray &, const IPartitionsManager &);    // parse dmesg output and return found problems for disks
+    std::map<Disk, std::set<std::string>> parse(const std::string &, const IPartitionsManager &);
 }
 
 #endif // DMESGPARSER_H

@@ -1,5 +1,5 @@
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Gui Network RemoteObjects)
+find_package(Qt6 REQUIRED COMPONENTS Quick Gui Network)
 
 qt6_add_resources(QML_RESOURCES
     Qml/resources.qrc
@@ -17,14 +17,13 @@ add_executable(monitor
     AgentsStatusProvider.hpp
     Configuration.cpp
     Configuration.hpp
+    HealthEnumQml.hpp
     IAgentsStatusProvider.hpp
     main.cpp
     ManualAgentsValidator.cpp
     ManualAgentsValidator.hpp
     ${QML_RESOURCES}
 )
-
-qt_add_repc_replicas(monitor ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep)
 
 target_link_libraries(monitor
     PRIVATE
@@ -33,15 +32,14 @@ target_link_libraries(monitor
         Qt::Network
         Qt::Quick
         Qt::Gui
-        Qt::Network
-        Qt::RemoteObjects
         QtZeroConf
 )
 
 target_include_directories(monitor
     PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
-        ${PROJECT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
 )
 
 set_target_properties(monitor PROPERTIES AUTOMOC TRUE)

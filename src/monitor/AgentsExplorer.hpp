@@ -4,7 +4,7 @@
 
 #include <QObject>
 
-#include "QtZeroConf/qzeroconf.h"
+#include "qzeroconf.h"
 #include "AgentInformation.hpp"
 
 

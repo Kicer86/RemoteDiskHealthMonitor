@@ -70,7 +70,7 @@ namespace
 
 
 Configuration::Configuration()
-    : m_settings(QSettings::IniFormat, QSettings::UserScope, ApplicationShortName, ApplicationShortName)
+    : m_settings(QSettings::IniFormat, QSettings::UserScope, QString::fromStdString(ApplicationShortName), QString::fromStdString(ApplicationShortName))
 {
 
 }

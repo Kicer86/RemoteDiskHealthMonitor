@@ -1,5 +1,8 @@
 
-#include <QDebug>
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <cassert>
 
 #include "common/OutputParsersUtils.h"
 #include "LsblkOutputParser.h"
@@ -9,27 +12,37 @@ namespace
 {
     struct RawLsblkEntry
     {
-        QString name;
-        QString type;
+        std::string name;
+        std::string type;
         std::uint64_t size;
         int major;
         int minor;
     };
 
-    RawLsblkEntry parseLine(const QString& line)
+    std::vector<std::string> splitString(const std::string& str, char delim)
     {
-        const QStringList cols = line.split(' ');
-        assert(cols.size() >= 6);               // we expect at least 6 columns here
+        std::vector<std::string> parts;
+        std::istringstream stream(str);
+        std::string part;
+        while (std::getline(stream, part, delim))
+            parts.push_back(part);
+        return parts;
+    }
 
-        const QStringList major_minor = cols[1].split(':');
-        assert(major_minor.size() == 2);        // we expect two numbers - major and minor after separation
+    RawLsblkEntry parseLine(const std::string& line)
+    {
+        const auto cols = splitString(line, ' ');
+        assert(cols.size() >= 6);
+
+        const auto major_minor = splitString(cols[1], ':');
+        assert(major_minor.size() == 2);
 
         const RawLsblkEntry rawEntry{
             .name = cols[0],
             .type = cols[5],
-            .size = cols[3].toULongLong(),
-            .major = major_minor[0].toInt(),
-            .minor = major_minor[1].toInt()
+            .size = std::stoull(cols[3]),
+            .major = std::stoi(major_minor[0]),
+            .minor = std::stoi(major_minor[1])
         };
 
         return rawEntry;
@@ -51,38 +64,36 @@ namespace
 }
 
 
-std::vector<LsblkOutputParser::LsblkEntry> LsblkOutputParser::parse(const QByteArray& output)
+std::vector<LsblkOutputParser::LsblkEntry> LsblkOutputParser::parse(const std::string& output)
 {
     std::vector<LsblkEntry> entries;
 
-    QStringList lines = ParsersUtils::clean(output);
-    lines.removeFirst();            // drop header
+    auto lines = ParsersUtils::clean(output);
 
-    while (lines.empty() == false)
+    if (!lines.empty())
+        lines.erase(lines.begin());            // drop header
+
+    for (const auto& line : lines)
     {
-        const QString line = lines.takeFirst();
+        if (line.empty()) continue;
+
         const RawLsblkEntry entry = parseLine(line);
 
         if (entry.type == "disk")
             entries.push_back(fromRaw(entry));
         else if (entry.type == "part")
         {
-            // check which disk should be upgraded
             auto entryIt = std::find_if(entries.begin(), entries.end(), [part_name = entry.name](const auto& disk) {
-                return part_name.startsWith(disk.name);
+                return part_name.find(disk.name) == 0;
             });
 
             if (entryIt == entries.end())
-                qWarning() << QString("Partition %1 does not match any disk").arg(entry.name);
+                std::cerr << "Partition " << entry.name << " does not match any disk" << std::endl;
             else
                 entryIt->partitions.insert(entry.name);
         }
-        else if (entry.type.left(4) == "raid")
+        else if (entry.type.substr(0, 4) == "raid")
             entries.push_back(fromRaw(entry));
-        else
-        {
-            // unknown or uninteresting entry, drop it
-        }
     }
 
     return entries;

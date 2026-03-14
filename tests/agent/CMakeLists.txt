@@ -1,5 +1,4 @@
 
-
 add_executable(agentTests
     DiscStatusCalculatorTests.cpp
     DmesgParserTests.cpp
@@ -17,6 +16,7 @@ add_executable(agentTests
 target_include_directories(agentTests
     PRIVATE
     ${PROJECT_SOURCE_DIR}/src/agent
+    ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(agentTests

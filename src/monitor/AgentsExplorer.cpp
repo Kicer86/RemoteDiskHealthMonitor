@@ -14,7 +14,7 @@ AgentsExplorer::AgentsExplorer(QObject* parent)
 
 void AgentsExplorer::startListening()
 {
-    m_zeroConf.startBrowser(ZeroConfServiceName);
+    m_zeroConf.startBrowser(QString::fromStdString(ZeroConfServiceName));
 }
 
 

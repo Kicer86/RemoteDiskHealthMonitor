@@ -1,8 +1,4 @@
 
-#include <QDebug>
-#include <QProcess>
-
-#include "common/OutputParsersUtils.h"
 #include "LinuxDiskCollector.h"
 #include "LsblkOutputParser.h"
 
@@ -20,7 +16,7 @@ std::vector<Disk> LinuxDiskCollector::GetDisksList()
 
     for (const auto& entry: m_lsblkEntries)
     {
-        const Disk disk(entry.name.toStdString());
+        const Disk disk(entry.name);
 
         disks.push_back(disk);
     }
@@ -29,10 +25,10 @@ std::vector<Disk> LinuxDiskCollector::GetDisksList()
 }
 
 
-bool LinuxDiskCollector::isPartition(const QString& deviceName) const
+bool LinuxDiskCollector::isPartition(const std::string& deviceName) const
 {
     for(const auto& entry: m_lsblkEntries)
-        for(const QString& partitionDevice: entry.partitions)
+        for(const auto& partitionDevice: entry.partitions)
             if (partitionDevice == deviceName)
                 return true;
 
@@ -40,10 +36,10 @@ bool LinuxDiskCollector::isPartition(const QString& deviceName) const
 }
 
 
-QString LinuxDiskCollector::diskForPartition(const QString& deviceName) const
+std::string LinuxDiskCollector::diskForPartition(const std::string& deviceName) const
 {
     for(const auto& entry: m_lsblkEntries)
-        for(const QString& partitionDevice: entry.partitions)
+        for(const auto& partitionDevice: entry.partitions)
             if (partitionDevice == deviceName)
                 return entry.name;
 

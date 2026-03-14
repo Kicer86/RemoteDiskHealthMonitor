@@ -2,17 +2,20 @@
 #pragma once
 
 #include <set>
-#include <QString>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <cstdint>
 
 class LsblkOutputParser
 {
 public:
     struct LsblkEntry
     {
-        QString name;
-        QString type;
+        std::string name;
+        std::string type;
         std::uint64_t size;
-        std::set<QString> partitions;
+        std::set<std::string> partitions;
         int major;
         int minor;
 
@@ -23,5 +26,5 @@ public:
         }
     };
 
-    static std::vector<LsblkEntry> parse(const QByteArray& output);
+    static std::vector<LsblkEntry> parse(const std::string& output);
 };

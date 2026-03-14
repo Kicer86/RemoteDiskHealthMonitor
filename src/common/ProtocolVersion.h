@@ -1,7 +1,7 @@
 #pragma once
-#include <QtGlobal>
+#include <cstdint>
 
-enum class ProtocolVersion : quint8
+enum class ProtocolVersion : uint8_t
 {
     UNKNOWN = 0,
     VER_1,

@@ -36,8 +36,8 @@ TEST(DmesgParserTest, NoErrors)
 TEST(DmesgParserTest, BufferIOError)
 {
     IPartitionsManagerMock pm;
-    ON_CALL(pm, isPartition(QString("sdb1"))).WillByDefault(Return(true));
-    ON_CALL(pm, diskForPartition(QString("sdb1"))).WillByDefault(Return("sdb"));
+    ON_CALL(pm, isPartition(std::string("sdb1"))).WillByDefault(Return(true));
+    ON_CALL(pm, diskForPartition(std::string("sdb1"))).WillByDefault(Return("sdb"));
 
     const auto errors = DmesgParser::parse(
     R"(

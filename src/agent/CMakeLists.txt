@@ -1,42 +1,34 @@
 
-find_package(Qt6 REQUIRED COMPONENTS Core RemoteObjects)
-
 ADD_EXECUTABLE( agent
-				main.cpp
-				IProbe.h
-				ISmartReader.h
-				SmartReader.h
-                Server.h
-                Server.cpp
+    main.cpp
+    IProbe.h
+    ISmartReader.h
+    SmartReader.h
+    HttpServer.h
+    HttpServer.cpp
+    MdnsPublisher.h
+    MdnsPublisher.cpp
 
-                DiscStatusCalculator.h
-                DiscStatusCalculator.cpp
-                IDiskCollector.h
-                Disk.h
-                Disk.cpp
-                SystemUtilitiesFactory.h
+    DiscStatusCalculator.h
+    DiscStatusCalculator.cpp
+    IDiskCollector.h
+    Disk.h
+    Disk.cpp
+    SystemUtilitiesFactory.h
 )
-
-qt_add_repc_sources(agent ${PROJECT_SOURCE_DIR}/src/common/AgentStatus.rep)
 
 target_include_directories(agent
     PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/external/cpp-httplib
+        ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
+        ${PROJECT_SOURCE_DIR}/external/mdns
 )
 
 target_link_libraries(agent
     PRIVATE
         common
-
-        QtZeroConf
-        Qt::Core
-        Qt::Network
-        Qt::RemoteObjects
 )
-
-set_target_properties(agent PROPERTIES AUTOMOC TRUE)
 
 if(WIN32)
     find_library(WBEMUUID_LIBRARY wbemuuid
@@ -44,7 +36,7 @@ if(WIN32)
         REQUIRED
     )
 
-set_target_properties(agent PROPERTIES LINK_FLAGS " /MANIFESTUAC:\"level='requireAdministrator'\"")
+    set_target_properties(agent PROPERTIES LINK_FLAGS " /MANIFESTUAC:\"level='requireAdministrator'\"")
 
     target_sources(agent
         PRIVATE
@@ -65,6 +57,8 @@ set_target_properties(agent PROPERTIES LINK_FLAGS " /MANIFESTUAC:\"level='requir
     target_link_libraries(agent
         PRIVATE
             ${WBEMUUID_LIBRARY}
+            ws2_32
+            iphlpapi
     )
 elseif(UNIX AND NOT APPLE)
     target_sources(agent
@@ -85,8 +79,12 @@ elseif(UNIX AND NOT APPLE)
             linux/SmartCtlOutputParser.cpp
             linux/SmartCtlOutputParser.h
     )
+
+    target_link_libraries(agent
+        PRIVATE
+            pthread
+    )
 elseif(APPLE)
-    # use SMART reader from linux
     target_sources(agent
         PRIVATE
             linux/DmesgParser.cpp
@@ -104,6 +102,11 @@ elseif(APPLE)
             linux/LsblkOutputParser.h
             linux/SmartCtlOutputParser.cpp
             linux/SmartCtlOutputParser.h
+    )
+
+    target_link_libraries(agent
+        PRIVATE
+            pthread
     )
 else()
     message(FATAL_ERROR "Unsupported system")

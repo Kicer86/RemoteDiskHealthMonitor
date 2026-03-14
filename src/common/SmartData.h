@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <QString>
+#include <string>
 
 class SmartData
 {
@@ -74,8 +74,8 @@ public:
 
     struct AttrData
     {
-        int value; 
-        int worst; 
+        int value;
+        int worst;
         int rawVal;
 
         auto operator<=>(const AttrData &) const = default;
@@ -85,5 +85,5 @@ public:
 
     auto operator<=>(const SmartData &) const = default;
 
-    static QString GetAttrTypeName(const SmartAttribute& _uChar);
+    static std::string GetAttrTypeName(const SmartAttribute& _uChar);
 };
