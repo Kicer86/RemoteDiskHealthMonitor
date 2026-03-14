@@ -253,10 +253,18 @@ bool WMICommunication::CollectInfoAboutDiscsViaWMI()
             VARIANT vtPropDeviceId;
             hr = pclsObj->Get(L"DeviceID", 0, &vtPropDeviceId, 0, 0);
 
-            Disk disc( StringFromVariant(vtPropDeviceId) );
+            VARIANT vtPropModel;
+            hr = pclsObj->Get(L"Model", 0, &vtPropModel, 0, 0);
+
+            std::string model;
+            if (vtPropModel.vt == VT_BSTR)
+                model = StringFromVariant(vtPropModel);
+
+            Disk disc( StringFromVariant(vtPropDeviceId), model );
 
             m_discsCollection.push_back(disc);
 
+            VariantClear(&vtPropModel);
             VariantClear(&vtPropDeviceId);
 
             pclsObj->Release();

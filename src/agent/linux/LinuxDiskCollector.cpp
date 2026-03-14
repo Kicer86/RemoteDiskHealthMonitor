@@ -2,6 +2,9 @@
 #include "LinuxDiskCollector.h"
 #include "LsblkOutputParser.h"
 
+#include <fstream>
+#include <algorithm>
+
 
 LinuxDiskCollector::LinuxDiskCollector(const std::vector<LsblkOutputParser::LsblkEntry>& lsblkEntries)
     : m_lsblkEntries(lsblkEntries)
@@ -16,9 +19,17 @@ std::vector<Disk> LinuxDiskCollector::GetDisksList()
 
     for (const auto& entry: m_lsblkEntries)
     {
-        const Disk disk(entry.name);
+        std::string model;
+        std::ifstream modelFile("/sys/block/" + entry.name + "/device/model");
+        if (modelFile.is_open())
+        {
+            std::getline(modelFile, model);
+            // trim trailing whitespace
+            while (!model.empty() && (model.back() == ' ' || model.back() == '\t'))
+                model.pop_back();
+        }
 
-        disks.push_back(disk);
+        disks.emplace_back(entry.name, model);
     }
 
     return disks;
