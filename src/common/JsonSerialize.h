@@ -63,38 +63,13 @@ inline void from_json(const nlohmann::json& j, SmartData& s)
 // ProbeStatus
 inline void to_json(nlohmann::json& j, const ProbeStatus& p)
 {
-    j = nlohmann::json{{"health", p.health}};
-
-    if (p.rawData.index() == 0)
-    {
-        j["rawData"] = nlohmann::json{{"type", "text"}, {"value", std::get<0>(p.rawData)}};
-    }
-    else
-    {
-        nlohmann::json smartJson;
-        to_json(smartJson, std::get<1>(p.rawData));
-        smartJson["type"] = "smart";
-        j["rawData"] = smartJson;
-    }
+    j = nlohmann::json{{"health", p.health}, {"rawData", p.rawData}};
 }
 
 inline void from_json(const nlohmann::json& j, ProbeStatus& p)
 {
     j.at("health").get_to(p.health);
-
-    const auto& rd = j.at("rawData");
-    const auto type = rd.at("type").get<std::string>();
-
-    if (type == "text")
-    {
-        p.rawData = rd.at("value").get<std::string>();
-    }
-    else if (type == "smart")
-    {
-        SmartData sd;
-        from_json(rd, sd);
-        p.rawData = sd;
-    }
+    p.rawData = j.at("rawData");
 }
 
 

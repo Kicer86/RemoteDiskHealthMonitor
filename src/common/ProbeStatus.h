@@ -1,13 +1,15 @@
 
 #pragma once
 
-#include "agent/IProbe.h"
+#include <nlohmann/json.hpp>
+
+#include "common/GeneralHealth.h"
 
 
 struct ProbeStatus
 {
     GeneralHealth::Health health;
-    IProbe::RawData rawData;
+    nlohmann::json rawData;
 
-    auto operator<=>(const ProbeStatus &) const = default;
+    bool operator==(const ProbeStatus& other) const = default;
 };

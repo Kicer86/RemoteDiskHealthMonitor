@@ -7,8 +7,8 @@
 TEST(SerializationTest, DiskInfo)
 {
     const DiskInfo di("disk #1", GeneralHealth::CHECK_STATUS, {
-        ProbeStatus{.health = GeneralHealth::GOOD, .rawData = std::string("Some data")},
-        ProbeStatus{.health = GeneralHealth::BAD, .rawData = std::string("Some other data")}
+        ProbeStatus{.health = GeneralHealth::GOOD, .rawData = nlohmann::json{{"type", "text"}, {"value", "Some data"}}},
+        ProbeStatus{.health = GeneralHealth::BAD, .rawData = nlohmann::json{{"type", "text"}, {"value", "Some other data"}}}
     });
 
     nlohmann::json j = di;
@@ -22,8 +22,8 @@ TEST(SerializationTest, DiskInfoList)
 {
     const std::vector<DiskInfo> di_vec = {
         DiskInfo("disk #1", GeneralHealth::CHECK_STATUS, {
-            ProbeStatus{.health = GeneralHealth::GOOD, .rawData = std::string("Some data")},
-            ProbeStatus{.health = GeneralHealth::BAD, .rawData = std::string("Some other data")}
+            ProbeStatus{.health = GeneralHealth::GOOD, .rawData = nlohmann::json{{"type", "text"}, {"value", "Some data"}}},
+            ProbeStatus{.health = GeneralHealth::BAD, .rawData = nlohmann::json{{"type", "text"}, {"value", "Some other data"}}}
         })
     };
 

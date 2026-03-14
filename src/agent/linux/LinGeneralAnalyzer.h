@@ -17,7 +17,7 @@ public:
     LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager>);
 
     GeneralHealth::Health GetStatus(const Disk& disk) override;
-    IProbe::RawData GetRawData(const Disk& disk) override;
+    nlohmann::json GetRawData(const Disk& disk) override;
 
 private:
     std::map<Disk, std::set<std::string>> m_errors;

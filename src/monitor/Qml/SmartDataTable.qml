@@ -34,8 +34,8 @@ Item {
         var texts = []
         for (var i = 0; i < diskObject.probes.length; i++) {
             var probe = diskObject.probes[i]
-            if (probe.type === "text" && probe.text) {
-                texts.push(probe.text)
+            if (probe.type === "text" && probe.value) {
+                texts.push(probe.value)
             }
         }
         return texts
