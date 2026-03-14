@@ -11,6 +11,7 @@ Build-Depends: debhelper-compat (= 13),
                qt6-declarative-dev,
                libavahi-client-dev
 Standards-Version: 4.6.0
+Homepage: https://github.com/Kicer86/RemoteDiskHealthMonitor
 
 Package: rdhm-monitor
 Architecture: any

@@ -3,7 +3,7 @@ Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Remote Disc Health Monitor - Agent
 License:        GPL-3.0-or-later
-URL:            https://github.com/user/hdd-monitor
+URL:            https://github.com/Kicer86/RemoteDiskHealthMonitor
 
 Source0:        %{name}-%{version}.tar.gz
 

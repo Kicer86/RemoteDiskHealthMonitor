@@ -1,6 +1,6 @@
 [Unit]
 Description=Remote Disc Health Monitor Agent
-Documentation=https://github.com/user/hdd-monitor
+Documentation=https://github.com/Kicer86/RemoteDiskHealthMonitor
 After=network.target
 
 [Service]

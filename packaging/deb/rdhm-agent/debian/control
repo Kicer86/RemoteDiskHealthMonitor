@@ -8,6 +8,7 @@ Build-Depends: debhelper-compat (= 13),
                g++ (>= 10),
                pkg-config
 Standards-Version: 4.6.0
+Homepage: https://github.com/Kicer86/RemoteDiskHealthMonitor
 
 Package: rdhm-agent
 Architecture: any
