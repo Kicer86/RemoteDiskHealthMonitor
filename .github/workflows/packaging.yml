@@ -128,7 +128,7 @@ jobs:
       if: matrix.component == 'rdhm-monitor'
       run: |
         pacman -S --noconfirm \
-          qt6-base qt6-declarative qt6-quickcontrols2 avahi
+          qt6-base qt6-declarative avahi
 
     - name: Build package
       run: |

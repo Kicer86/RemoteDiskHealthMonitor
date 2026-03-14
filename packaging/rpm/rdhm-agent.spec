@@ -48,3 +48,7 @@ install -Dm644 packaging/conf/agent.conf \
 %{_sbindir}/rdhm-agent
 %{_unitdir}/rdhm-agent.service
 %config(noreplace) %{_sysconfdir}/rdhm/agent.conf
+
+%changelog
+* Sat Mar 14 2026 Michał Walenciak <michalwalenciak@gmail.com> - 0.2.0-1
+- Initial packaging

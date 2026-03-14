@@ -21,6 +21,7 @@ endif()
 enable_testing()
 
 #external projects
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/googletest)
 
 if(BUILD_MONITOR)
