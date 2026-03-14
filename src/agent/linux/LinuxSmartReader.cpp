@@ -27,7 +27,7 @@ SmartData SmartReader::ReadSMARTData(const Disk& disk)
 }
 
 
-GeneralHealth SmartReader::ReadDisksStatus(const Disk &)
+GeneralHealth::Health SmartReader::ReadDisksStatus(const Disk &)
 {
     return GeneralHealth::GOOD;
 }

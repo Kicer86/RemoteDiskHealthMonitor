@@ -4,7 +4,7 @@
 
 #include "common/GeneralHealth.h"
 #include "agent/Disk.h"
-#include "common/DiskInfo.h"
+#include "common/SmartData.h"
 
 
 class ISmartReader
@@ -12,5 +12,5 @@ class ISmartReader
 public:
 	virtual ~ISmartReader() = default;
 	virtual SmartData ReadSMARTData(const Disk & _disk) = 0;
-	virtual GeneralHealth ReadDisksStatus(const Disk & _disk) = 0;
+	virtual GeneralHealth::Health ReadDisksStatus(const Disk & _disk) = 0;
 };

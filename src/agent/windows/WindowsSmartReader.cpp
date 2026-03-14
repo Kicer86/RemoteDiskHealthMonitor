@@ -13,7 +13,7 @@ SmartData SmartReader::ReadSMARTData(const Disk& _disk)
 	return wmi.GetSMARTData();
 }
 
-GeneralHealth SmartReader::ReadDisksStatus(const Disk& _disk)
+GeneralHealth::Health SmartReader::ReadDisksStatus(const Disk& _disk)
 {
 	CMDCommunication reader;
 	return reader.CollectDiskStatus(_disk);
