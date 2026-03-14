@@ -6,7 +6,7 @@ jobs:
   deb:
     name: Debian packages (Ubuntu)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container: ubuntu:24.10
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +75,7 @@ jobs:
     - name: Install common build dependencies
       run: |
         dnf install -y \
-          cmake gcc-c++ make rpm-build
+          cmake gcc-c++ make rpm-build systemd-rpm-macros
 
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'

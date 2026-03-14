@@ -10,6 +10,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  cmake >= 3.16
 BuildRequires:  gcc-c++ >= 10
 BuildRequires:  make
+BuildRequires:  systemd-rpm-macros
 
 Requires:       smartmontools
 Requires:       util-linux
