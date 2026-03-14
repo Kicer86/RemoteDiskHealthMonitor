@@ -128,7 +128,6 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 
 nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
 {
-    const auto rawOutput = m_reader->ReadRawOutput(disk);
     const auto smart = m_reader->ReadSMARTData(disk);
 
     nlohmann::json attrs = nlohmann::json::array();

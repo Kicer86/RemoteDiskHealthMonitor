@@ -21,7 +21,8 @@ endif()
 enable_testing()
 
 #external projects
-add_subdirectory(external/googletest)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 
 if(BUILD_MONITOR)
     add_subdirectory(external/QtZeroConf)

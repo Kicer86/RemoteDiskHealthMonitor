@@ -8,8 +8,8 @@
 
 namespace
 {
-    const std::vector<std::string> ErrorPatterns = {
-        "Buffer I/O error on device ([a-z0-9]*)"
+    const std::vector<std::regex> ErrorPatterns = {
+        std::regex("Buffer I/O error on device ([a-z0-9]*)")
     };
 }
 
@@ -22,9 +22,8 @@ std::map<Disk, std::set<std::string>> DmesgParser::parse(const std::string& outp
     const auto lines = ParsersUtils::clean(output);
 
     for(const auto& line: lines)
-        for(const auto& errorPattern: ErrorPatterns)
+        for(const auto& errorRegex: ErrorPatterns)
         {
-            std::regex errorRegex(errorPattern);
             std::smatch errorMatch;
 
             if (std::regex_search(line, errorMatch, errorRegex))

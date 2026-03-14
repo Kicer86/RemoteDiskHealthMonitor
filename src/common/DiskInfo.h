@@ -27,7 +27,7 @@ public:
 
 private:
 	std::string m_name;
-	GeneralHealth::Health m_health;
+	GeneralHealth::Health m_health = GeneralHealth::UNKNOWN;
     std::vector<ProbeStatus> m_statuses;
 	DiskSummary m_summary;
 };

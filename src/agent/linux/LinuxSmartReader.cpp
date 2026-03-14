@@ -1,6 +1,7 @@
 
 #include <cstdio>
 #include <array>
+#include <algorithm>
 #include <iostream>
 
 #include "../SmartReader.h"
@@ -9,8 +10,22 @@
 
 namespace
 {
+    bool isValidDeviceId(const std::string& id)
+    {
+        return !id.empty() && id.size() <= 64 &&
+               std::all_of(id.begin(), id.end(), [](char c) {
+                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
+               });
+    }
+
     std::string runSmartctl(const Disk& disk)
     {
+        if (!isValidDeviceId(disk.GetDeviceId()))
+        {
+            std::cerr << "Invalid device ID, skipping smartctl: " << disk.GetDeviceId() << '\n';
+            return {};
+        }
+
         std::string output;
         std::array<char, 4096> buffer;
 

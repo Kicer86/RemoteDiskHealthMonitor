@@ -7,12 +7,25 @@
 #include "common/constants.hpp"
 
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <list>
 #include <condition_variable>
 #include <sstream>
 #include <thread>
+
+
+namespace
+{
+    bool isValidDiskName(const std::string& name)
+    {
+        return !name.empty() && name.size() <= 64 &&
+               std::all_of(name.begin(), name.end(), [](char c) {
+                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
+               });
+    }
+}
 
 
 struct HttpServer::Impl
@@ -28,7 +41,13 @@ struct HttpServer::Impl
 
     std::function<void()> refreshCallback;
 
+    // Refresh cooldown
+    static constexpr int RefreshCooldownSeconds = 600;  // 10 minutes
+    std::chrono::steady_clock::time_point lastRefreshTime{};
+    std::mutex refreshMutex;
+
     // SSE support
+    static constexpr size_t MaxSseClients = 16;
     struct SseClient
     {
         std::mutex mutex;
@@ -105,6 +124,14 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
     // GET /api/v1/disks/:name
     m_impl->server.Get("/api/v1/disks/:name", [this](const httplib::Request& req, httplib::Response& res) {
         const auto& name = req.path_params.at("name");
+
+        if (!isValidDiskName(name))
+        {
+            res.status = 400;
+            res.set_content(R"({"error":"invalid disk name"})", "application/json");
+            return;
+        }
+
         std::lock_guard lock(m_impl->dataMutex);
 
         for (const auto& d : m_impl->disks)
@@ -122,10 +149,25 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
 
     // POST /api/v1/refresh
     m_impl->server.Post("/api/v1/refresh", [this](const httplib::Request&, httplib::Response& res) {
+        bool refreshed = false;
         if (m_impl->refreshCallback)
-            m_impl->refreshCallback();
+        {
+            std::lock_guard lock(m_impl->refreshMutex);
+            const auto now = std::chrono::steady_clock::now();
+            const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+                now - m_impl->lastRefreshTime).count();
 
-        res.set_content(m_impl->buildStatusJson().dump(), "application/json");
+            if (elapsed >= Impl::RefreshCooldownSeconds)
+            {
+                m_impl->refreshCallback();
+                m_impl->lastRefreshTime = now;
+                refreshed = true;
+            }
+        }
+
+        auto j = m_impl->buildStatusJson();
+        j["refreshed"] = refreshed;
+        res.set_content(j.dump(), "application/json");
     });
 
     // GET /api/v1/events — Server-Sent Events
@@ -134,6 +176,17 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
 
         {
             std::lock_guard lock(m_impl->sseMutex);
+
+            // Remove dead clients first
+            m_impl->sseClients.remove_if([](const auto& c) { return !c->alive.load(); });
+
+            if (m_impl->sseClients.size() >= Impl::MaxSseClients)
+            {
+                res.status = 429;
+                res.set_content(R"({"error":"too many SSE clients"})", "application/json");
+                return;
+            }
+
             m_impl->sseClients.push_back(client);
         }
 

@@ -6,7 +6,7 @@ jobs:
   deb:
     name: Debian packages (Ubuntu)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container: ubuntu:25.04
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +75,7 @@ jobs:
     - name: Install common build dependencies
       run: |
         dnf install -y \
-          cmake gcc-c++ make rpm-build
+          cmake gcc-c++ make rpm-build systemd-rpm-macros
 
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
@@ -128,7 +128,7 @@ jobs:
       if: matrix.component == 'rdhm-monitor'
       run: |
         pacman -S --noconfirm \
-          qt6-base qt6-declarative qt6-quickcontrols2 avahi
+          qt6-base qt6-declarative avahi
 
     - name: Build package
       run: |

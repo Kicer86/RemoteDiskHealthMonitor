@@ -37,3 +37,10 @@ network via mDNS/ZeroConf and displays disk health status in real time.
 %files
 %license LICENSE
 %{_bindir}/rdhm-monitor
+%{_libdir}/libQtZeroConf.so*
+%exclude %{_includedir}/QtZeroConf
+%exclude %{_libdir}/cmake/QtZeroConf
+
+%changelog
+* Sat Mar 14 2026 Michał Walenciak <michalwalenciak@gmail.com> - 0.2.0-1
+- Initial packaging
