@@ -12,6 +12,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+OUTPUT_DIR="${1:-$PROJECT_ROOT}"
 
 BUILD_DIR=$(mktemp -d)
 PKG_DIR="$BUILD_DIR/rdhm-monitor-0.2.0"
@@ -24,7 +25,7 @@ cp -a "$SCRIPT_DIR/debian" "$PKG_DIR/debian"
 cd "$PKG_DIR"
 dpkg-buildpackage -b -us -uc
 
+cp "$BUILD_DIR"/*.deb "$OUTPUT_DIR/"
 echo ""
-echo "Package built. .deb file(s) in: $BUILD_DIR"
-echo "Copy the .deb from there before this script exits, or pass --no-cleanup."
-ls -1 "$BUILD_DIR"/*.deb 2>/dev/null || true
+echo "Package(s) copied to: $OUTPUT_DIR"
+ls -1 "$OUTPUT_DIR"/rdhm-monitor*.deb 2>/dev/null || true
