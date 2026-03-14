@@ -13,6 +13,7 @@ Item {
     property int agentConnectionState: 3
     property var diskNames: []
     property var diskData: []
+    property string lastRefreshed: ""
 
     function formatBytes(bytes) {
         if (bytes <= 0) return ""
@@ -128,6 +129,14 @@ Item {
                     default:                       return palette.text
                 }
             }
+        }
+
+        // Last refreshed
+        Label {
+            visible: root.lastRefreshed !== ""
+            text: qsTr("Last refreshed: %1").arg(root.lastRefreshed)
+            font.pixelSize: 11
+            opacity: 0.5
         }
 
         // Disks section

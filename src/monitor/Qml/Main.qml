@@ -75,6 +75,7 @@ ApplicationWindow {
                         required property int index
                         required property var agentDiskInfoNames
                         required property var agentDiskInfoData
+                        required property string agentLastRefreshed
 
                         width: agentListView.width
                         highlighted: agentListView.currentIndex === index
@@ -125,6 +126,7 @@ ApplicationWindow {
                 agentConnectionState: agentListView.currentItem ? agentListView.currentItem.agentConnectionState : 3
                 diskNames: agentListView.currentItem ? agentListView.currentItem.agentDiskInfoNames : []
                 diskData: agentListView.currentItem ? agentListView.currentItem.agentDiskInfoData : []
+                lastRefreshed: agentListView.currentItem ? agentListView.currentItem.agentLastRefreshed : ""
             }
 
             // Empty state when no agent selected
