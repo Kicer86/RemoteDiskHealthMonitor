@@ -213,105 +213,119 @@ Item {
                     }
 
                     // Disk summary info
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 0
+                        spacing: 2
                         visible: diskPane.diskObj && diskPane.diskObj.summary !== undefined
 
                         property var s: diskPane.diskObj ? diskPane.diskObj.summary : null
 
-                        Label {
-                            visible: parent.s && parent.s.model !== ""
-                            text: parent.s ? parent.s.model : ""
-                            font.pixelSize: 11
-                            opacity: 0.7
+                        // Row 1: model · vendor · capacity
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            visible: parent.s && (parent.s.model !== "" || parent.s.vendor !== "" || parent.s.capacityBytes > 0)
+
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.model !== ""
+                                text: parent.parent.s ? parent.parent.s.model : ""
+                                font.pixelSize: 11
+                                opacity: 0.7
+                            }
+
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.model !== "" && parent.parent.s.vendor !== ""
+                                text: "  ·  "
+                                font.pixelSize: 11
+                                opacity: 0.4
+                            }
+
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.vendor !== ""
+                                text: parent.parent.s ? parent.parent.s.vendor : ""
+                                font.pixelSize: 11
+                                opacity: 0.7
+                            }
+
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.capacityBytes > 0 && (parent.parent.s.model !== "" || parent.parent.s.vendor !== "")
+                                text: "  ·  "
+                                font.pixelSize: 11
+                                opacity: 0.4
+                            }
+
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.capacityBytes > 0
+                                text: parent.parent.s ? root.formatBytes(parent.parent.s.capacityBytes) : ""
+                                font.pixelSize: 11
+                                opacity: 0.7
+                            }
+
+                            Item { Layout.fillWidth: true }
                         }
 
-                        Label {
-                            visible: parent.s && parent.s.vendor !== ""
-                            text: "  ·  "
-                            font.pixelSize: 11
-                            opacity: 0.4
-                        }
+                        // Row 2: drive type badge · temperature · power-on hours
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            visible: parent.s && (parent.s.driveType !== "" || parent.s.temperatureC !== undefined || parent.s.powerOnHours !== undefined)
 
-                        Label {
-                            visible: parent.s && parent.s.vendor !== ""
-                            text: parent.s ? parent.s.vendor : ""
-                            font.pixelSize: 11
-                            opacity: 0.7
-                        }
+                            Rectangle {
+                                visible: parent.parent.s && parent.parent.s.driveType !== ""
+                                width: driveTypeLabel.implicitWidth + 10
+                                height: driveTypeLabel.implicitHeight + 4
+                                radius: 3
+                                color: {
+                                    if (!parent.parent.s) return "#9E9E9E"
+                                    switch (parent.parent.s.driveType) {
+                                        case "NVMe": return "#1565C0"
+                                        case "SSD":  return "#2E7D32"
+                                        case "HDD":  return "#795548"
+                                        case "USB":  return "#F57C00"
+                                        default:     return "#9E9E9E"
+                                    }
+                                }
 
-                        Label {
-                            visible: parent.s && parent.s.capacityBytes > 0
-                            text: "  ·  "
-                            font.pixelSize: 11
-                            opacity: 0.4
-                        }
-
-                        Label {
-                            visible: parent.s && parent.s.capacityBytes > 0
-                            text: parent.s ? root.formatBytes(parent.s.capacityBytes) : ""
-                            font.pixelSize: 11
-                            opacity: 0.7
-                        }
-
-                        Item { width: 8 }
-
-                        Rectangle {
-                            visible: parent.s && parent.s.driveType !== ""
-                            width: driveTypeLabel.implicitWidth + 10
-                            height: driveTypeLabel.implicitHeight + 4
-                            radius: 3
-                            color: {
-                                if (!parent.s) return "#9E9E9E"
-                                switch (parent.s.driveType) {
-                                    case "NVMe": return "#1565C0"
-                                    case "SSD":  return "#2E7D32"
-                                    case "HDD":  return "#795548"
-                                    case "USB":  return "#F57C00"
-                                    default:     return "#9E9E9E"
+                                Label {
+                                    id: driveTypeLabel
+                                    anchors.centerIn: parent
+                                    text: parent.parent.parent.s ? parent.parent.parent.s.driveType : ""
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: "white"
                                 }
                             }
 
                             Label {
-                                id: driveTypeLabel
-                                anchors.centerIn: parent
-                                text: parent.parent.s ? parent.parent.s.driveType : ""
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: "white"
+                                visible: parent.parent.s && parent.parent.s.driveType !== "" && parent.parent.s.temperatureC !== undefined
+                                text: "  ·  "
+                                font.pixelSize: 11
+                                opacity: 0.4
                             }
-                        }
 
-                        Label {
-                            visible: parent.s && parent.s.temperatureC !== undefined
-                            text: "  ·  "
-                            font.pixelSize: 11
-                            opacity: 0.4
-                        }
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.temperatureC !== undefined
+                                text: parent.parent.s && parent.parent.s.temperatureC !== undefined ? parent.parent.s.temperatureC + " °C" : ""
+                                font.pixelSize: 11
+                                opacity: 0.7
+                            }
 
-                        Label {
-                            visible: parent.s && parent.s.temperatureC !== undefined
-                            text: parent.s && parent.s.temperatureC !== undefined ? parent.s.temperatureC + " °C" : ""
-                            font.pixelSize: 11
-                            opacity: 0.7
-                        }
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.powerOnHours !== undefined && (parent.parent.s.driveType !== "" || parent.parent.s.temperatureC !== undefined)
+                                text: "  ·  "
+                                font.pixelSize: 11
+                                opacity: 0.4
+                            }
 
-                        Label {
-                            visible: parent.s && parent.s.powerOnHours !== undefined
-                            text: "  ·  "
-                            font.pixelSize: 11
-                            opacity: 0.4
-                        }
+                            Label {
+                                visible: parent.parent.s && parent.parent.s.powerOnHours !== undefined
+                                text: parent.parent.s && parent.parent.s.powerOnHours !== undefined ? qsTr("%1 h on").arg(parent.parent.s.powerOnHours) : ""
+                                font.pixelSize: 11
+                                opacity: 0.7
+                            }
 
-                        Label {
-                            visible: parent.s && parent.s.powerOnHours !== undefined
-                            text: parent.s && parent.s.powerOnHours !== undefined ? qsTr("%1 h on").arg(parent.s.powerOnHours) : ""
-                            font.pixelSize: 11
-                            opacity: 0.7
+                            Item { Layout.fillWidth: true }
                         }
-
-                        Item { Layout.fillWidth: true }
                     }
 
                     // Probe details (expanded)
