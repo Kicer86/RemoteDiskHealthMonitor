@@ -6,6 +6,7 @@ add_executable(agentTests
     SmartCtlOutputParserTests.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/Disk.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/DiscStatusCalculator.cpp
+    ${PROJECT_SOURCE_DIR}/src/agent/OutputParsersUtils.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/DmesgParser.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/LsblkOutputParser.cpp
     ${PROJECT_SOURCE_DIR}/src/agent/linux/SmartCtlOutputParser.cpp
