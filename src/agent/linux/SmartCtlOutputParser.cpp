@@ -85,20 +85,22 @@ namespace SmartCtlOutputParser
                 if (rawAttributeSplitted.size() >= 10)
                 {
                     const auto& id = rawAttributeSplitted[0];
+                    const auto& name = rawAttributeSplitted[1];
                     const auto& value = rawAttributeSplitted[3];
                     const auto& worst = rawAttributeSplitted[4];
+                    const auto& thresh = rawAttributeSplitted[5];
                     const auto& rawValue = rawAttributeSplitted[9];
 
                     try
                     {
-                        smartData.smartData.emplace(
-                            static_cast<SmartData::SmartAttribute>(std::stoul(id)),
-                            SmartData::AttrData {
-                                std::stoi(value),
-                                std::stoi(worst),
-                                std::stoll(rawValue, nullptr, 0)
-                            }
-                        );
+                        smartData.attributes.push_back(SmartData::Attribute{
+                            static_cast<uint8_t>(std::stoul(id)),
+                            name,
+                            std::stoi(value),
+                            std::stoi(worst),
+                            std::stoi(thresh),
+                            std::stoll(rawValue, nullptr, 0)
+                        });
                     }
                     catch (const std::exception&) {}
                 }

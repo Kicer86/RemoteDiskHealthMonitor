@@ -14,13 +14,15 @@ nlohmann::json LinSmartAnalyzer::GetRawData(const Disk& _disk)
     const auto smart = SmartReader().ReadSMARTData(_disk);
 
     nlohmann::json attrs = nlohmann::json::array();
-    for (const auto& [attr, data] : smart.smartData)
+    for (const auto& attr : smart.attributes)
     {
         attrs.push_back({
-            {"name", SmartData::GetAttrTypeName(attr)},
-            {"value", data.value},
-            {"worst", data.worst},
-            {"rawVal", data.rawVal}
+            {"id", attr.id},
+            {"name", attr.name},
+            {"value", attr.value},
+            {"worst", attr.worst},
+            {"threshold", attr.threshold},
+            {"rawVal", attr.rawVal}
         });
     }
 

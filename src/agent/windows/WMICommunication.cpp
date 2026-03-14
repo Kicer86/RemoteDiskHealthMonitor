@@ -299,14 +299,19 @@ void WMICommunication::FeedSmartDataStructure(const std::vector<BYTE>& _data, co
     {
         if (_data.size() >= (i + 12))
         {
-            SmartData::AttrData attrData;
-            attrData.value = _data.at(i + 5);
-            attrData.worst = _data.at(i + 6);
-            attrData.rawVal = _data.at(i + 7);
-            m_smartData.smartData.insert(std::pair<SmartData::SmartAttribute, SmartData::AttrData>(
-                static_cast<SmartData::SmartAttribute>(_data.at(i + 2)),
-                attrData
-            ));
+            uint8_t id = _data.at(i + 2);
+            int64_t rawVal = 0;
+            for (int b = 5; b >= 0; --b)
+                rawVal = (rawVal << 8) | _data.at(i + 5 + b);
+
+            m_smartData.attributes.push_back(SmartData::Attribute{
+                id,
+                SmartData::GetCanonicalName(id),
+                static_cast<int>(_data.at(i + 3)),
+                static_cast<int>(_data.at(i + 4)),
+                0,
+                rawVal
+            });
         }
 
     }

@@ -101,6 +101,14 @@ Item {
                     color: palette.brightText
                 }
                 Label {
+                    text: qsTr("Thresh")
+                    font.bold: true
+                    font.pixelSize: 11
+                    Layout.preferredWidth: 60
+                    horizontalAlignment: Text.AlignRight
+                    color: palette.brightText
+                }
+                Label {
                     text: qsTr("Raw")
                     font.bold: true
                     font.pixelSize: 11
@@ -149,6 +157,14 @@ Item {
                         Layout.preferredWidth: 60
                         horizontalAlignment: Text.AlignRight
                         font.family: "monospace"
+                    }
+                    Label {
+                        text: modelData.threshold !== undefined ? modelData.threshold : "—"
+                        font.pixelSize: 11
+                        Layout.preferredWidth: 60
+                        horizontalAlignment: Text.AlignRight
+                        font.family: "monospace"
+                        color: modelData.threshold > 0 && modelData.value <= modelData.threshold ? "red" : palette.text
                     }
                     Label {
                         text: modelData.rawVal !== undefined ? modelData.rawVal : "—"
