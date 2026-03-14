@@ -6,7 +6,7 @@ jobs:
   deb:
     name: Debian packages (Ubuntu)
     runs-on: ubuntu-latest
-    container: ubuntu:24.10
+    container: ubuntu:25.04
     strategy:
       fail-fast: false
       matrix:
