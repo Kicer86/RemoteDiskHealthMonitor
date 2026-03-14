@@ -5,6 +5,7 @@
 #include "GeneralHealth.h"
 #include "SmartData.h"
 #include "ProbeStatus.h"
+#include "DiskSummary.h"
 #include "DiskInfo.h"
 
 
@@ -53,6 +54,56 @@ inline void from_json(const nlohmann::json& j, SmartData& s)
 }
 
 
+// SmartTestStatus
+inline void to_json(nlohmann::json& j, const SmartTestStatus& s)
+{
+    j = nlohmann::json{
+        {"running", s.running},
+        {"percentRemaining", s.percentRemaining},
+        {"lastResult", s.lastResult}
+    };
+}
+
+inline void from_json(const nlohmann::json& j, SmartTestStatus& s)
+{
+    j.at("running").get_to(s.running);
+    j.at("percentRemaining").get_to(s.percentRemaining);
+    j.at("lastResult").get_to(s.lastResult);
+}
+
+
+// DiskSummary
+inline void to_json(nlohmann::json& j, const DiskSummary& s)
+{
+    j = nlohmann::json{
+        {"model", s.model},
+        {"vendor", s.vendor},
+        {"capacityBytes", s.capacityBytes},
+        {"driveType", s.driveType}
+    };
+    if (s.temperatureC)
+        j["temperatureC"] = *s.temperatureC;
+    if (s.powerOnHours)
+        j["powerOnHours"] = *s.powerOnHours;
+    if (s.selfTestStatus)
+        j["selfTestStatus"] = *s.selfTestStatus;
+}
+
+inline void from_json(const nlohmann::json& j, DiskSummary& s)
+{
+    j.at("model").get_to(s.model);
+    j.at("vendor").get_to(s.vendor);
+    j.at("capacityBytes").get_to(s.capacityBytes);
+    j.at("driveType").get_to(s.driveType);
+    if (j.contains("temperatureC"))
+        s.temperatureC = j.at("temperatureC").get<int>();
+    if (j.contains("powerOnHours"))
+        s.powerOnHours = j.at("powerOnHours").get<int64_t>();
+    if (j.contains("selfTestStatus"))
+        s.selfTestStatus = j.at("selfTestStatus").get<SmartTestStatus>();
+}
+
+
 // ProbeStatus
 inline void to_json(nlohmann::json& j, const ProbeStatus& p)
 {
@@ -72,7 +123,8 @@ inline void to_json(nlohmann::json& j, const DiskInfo& d)
     j = nlohmann::json{
         {"name", d.GetName()},
         {"health", d.GetHealth()},
-        {"probes", d.GetProbesStatuses()}
+        {"probes", d.GetProbesStatuses()},
+        {"summary", d.GetSummary()}
     };
 }
 
@@ -81,4 +133,6 @@ inline void from_json(const nlohmann::json& j, DiskInfo& d)
     d.SetName(j.at("name").get<std::string>());
     d.SetHealth(j.at("health").get<GeneralHealth::Health>());
     d.SetProbesStatuses(j.at("probes").get<std::vector<ProbeStatus>>());
+    if (j.contains("summary"))
+        d.SetSummary(j.at("summary").get<DiskSummary>());
 }
