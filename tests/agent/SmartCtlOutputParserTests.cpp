@@ -5,6 +5,84 @@
 
 using testing::UnorderedElementsAre;
 
+
+TEST(SmartCtlOutputParserTest, parseTestStatusCompleted)
+{
+    const auto status = SmartCtlOutputParser::parseTestStatus(
+        R"(
+            Self-test execution status:      (   0) The previous self-test routine completed
+                                                    without error or no self-test has ever
+                                                    been run.
+
+            SMART Self-test log structure revision number 1
+            Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+            # 1  Extended offline    Completed without error       00%      2161         -
+        )"
+    );
+
+    EXPECT_FALSE(status.running);
+    EXPECT_EQ(0, status.percentRemaining);
+    EXPECT_EQ("Completed without error", status.lastResult);
+}
+
+
+TEST(SmartCtlOutputParserTest, parseTestStatusRunning)
+{
+    const auto status = SmartCtlOutputParser::parseTestStatus(
+        R"(
+            Self-test execution status:      ( 249) Self-test routine in progress...
+                                                    90% of test remaining.
+
+            SMART Self-test log structure revision number 1
+            Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+            # 1  Extended offline    Completed without error       00%      2161         -
+        )"
+    );
+
+    EXPECT_TRUE(status.running);
+    EXPECT_EQ(90, status.percentRemaining);
+    EXPECT_EQ("Completed without error", status.lastResult);
+}
+
+
+TEST(SmartCtlOutputParserTest, parseTestStatusNoTestsRun)
+{
+    const auto status = SmartCtlOutputParser::parseTestStatus(
+        R"(
+            Self-test execution status:      (   0) The previous self-test routine completed
+                                                    without error or no self-test has ever
+                                                    been run.
+
+            SMART Self-test log structure revision number 1
+            No self-tests have been logged.  [To run self-tests, use: smartctl -t]
+        )"
+    );
+
+    EXPECT_FALSE(status.running);
+    EXPECT_EQ(0, status.percentRemaining);
+    EXPECT_TRUE(status.lastResult.empty());
+}
+
+
+TEST(SmartCtlOutputParserTest, parseTestStatusReadFailure)
+{
+    const auto status = SmartCtlOutputParser::parseTestStatus(
+        R"(
+            Self-test execution status:      (   0) The previous self-test routine completed
+                                                    without error or no self-test has ever
+                                                    been run.
+
+            SMART Self-test log structure revision number 1
+            Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+            # 1  Short offline       Completed: read failure       90%      4567         1234567
+        )"
+    );
+
+    EXPECT_FALSE(status.running);
+    EXPECT_EQ("Completed: read failure", status.lastResult);
+}
+
+
 TEST(SmartCtlOutputParserTest, fullOutput)
 {
     const auto result = SmartCtlOutputParser::parse(
