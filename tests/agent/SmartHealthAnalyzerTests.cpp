@@ -193,7 +193,6 @@ TEST_F(SmartHealthAnalyzerTest, GetRawDataReturnsSmartJsonFormat)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
-    EXPECT_CALL(*m_reader, ReadRawOutput(_)).WillOnce(Return(std::string{}));
     EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
 
     auto json = m_analyzer->GetRawData(m_disk);
