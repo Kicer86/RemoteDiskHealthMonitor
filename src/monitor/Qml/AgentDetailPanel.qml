@@ -14,6 +14,18 @@ Item {
     property var diskNames: []
     property var diskData: []
 
+    function formatBytes(bytes) {
+        if (bytes <= 0) return ""
+        var units = ["B", "KB", "MB", "GB", "TB", "PB"]
+        var i = 0
+        var val = bytes
+        while (val >= 1024 && i < units.length - 1) {
+            val /= 1024
+            i++
+        }
+        return val.toFixed(i > 0 ? 1 : 0) + " " + units[i]
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
@@ -191,7 +203,76 @@ Item {
                         }
                     }
 
-                    // SMART data table (expanded)
+                    // Disk summary info
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        visible: diskPane.diskObj && diskPane.diskObj.summary !== undefined
+
+                        property var s: diskPane.diskObj ? diskPane.diskObj.summary : null
+
+                        Label {
+                            visible: parent.s && parent.s.model !== ""
+                            text: parent.s ? parent.s.model : ""
+                            font.pixelSize: 11
+                            opacity: 0.7
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.vendor !== ""
+                            text: parent.s ? parent.s.vendor : ""
+                            font.pixelSize: 11
+                            opacity: 0.7
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.capacityBytes > 0
+                            text: parent.s ? root.formatBytes(parent.s.capacityBytes) : ""
+                            font.pixelSize: 11
+                            opacity: 0.7
+                        }
+
+                        Rectangle {
+                            visible: parent.s && parent.s.driveType !== ""
+                            width: driveTypeLabel.implicitWidth + 10
+                            height: driveTypeLabel.implicitHeight + 4
+                            radius: 3
+                            color: {
+                                if (!parent.s) return "#9E9E9E"
+                                switch (parent.s.driveType) {
+                                    case "NVMe": return "#1565C0"
+                                    case "SSD":  return "#2E7D32"
+                                    case "HDD":  return "#795548"
+                                    default:     return "#9E9E9E"
+                                }
+                            }
+
+                            Label {
+                                id: driveTypeLabel
+                                anchors.centerIn: parent
+                                text: parent.parent.s ? parent.parent.s.driveType : ""
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: "white"
+                            }
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.temperatureC !== undefined
+                            text: parent.s && parent.s.temperatureC !== undefined ? parent.s.temperatureC + " °C" : ""
+                            font.pixelSize: 11
+                            opacity: 0.7
+                        }
+
+                        Label {
+                            visible: parent.s && parent.s.powerOnHours !== undefined
+                            text: parent.s && parent.s.powerOnHours !== undefined ? qsTr("%1 h on").arg(parent.s.powerOnHours) : ""
+                            font.pixelSize: 11
+                            opacity: 0.7
+                        }
+                    }
+
+                    // Probe details (expanded)
                     SmartDataTable {
                         Layout.fillWidth: true
                         visible: diskPane.expanded
