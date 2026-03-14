@@ -17,6 +17,9 @@ ADD_EXECUTABLE( agent
     Disk.h
     Disk.cpp
     SystemUtilitiesFactory.h
+    VendorProfile.h
+    SmartHealthAnalyzer.h
+    SmartHealthAnalyzer.cpp
 )
 
 target_include_directories(agent
@@ -52,8 +55,6 @@ if(WIN32)
             windows/WinDiskCollector.h
             windows/WinDiskCollector.cpp
             windows/WinSystemUtilitiesFactory.cpp
-            windows/WinSmartAnalyzer.h
-            windows/WinSmartAnalyzer.cpp
     )
 
     target_link_libraries(agent
@@ -69,8 +70,6 @@ elseif(UNIX AND NOT APPLE)
             linux/DmesgParser.h
             linux/IPartitionsManager.h
             linux/LinuxSmartReader.cpp
-            linux/LinSmartAnalyzer.cpp
-            linux/LinSmartAnalyzer.h
             linux/LinGeneralAnalyzer.h
             linux/LinGeneralAnalyzer.cpp
             linux/LinSystemUtilitiesFactory.cpp
@@ -93,8 +92,6 @@ elseif(APPLE)
             linux/DmesgParser.h
             linux/IPartitionsManager.h
             linux/LinuxSmartReader.cpp
-            linux/LinSmartAnalyzer.cpp
-            linux/LinSmartAnalyzer.h
             linux/LinGeneralAnalyzer.h
             linux/LinGeneralAnalyzer.cpp
             linux/LinSystemUtilitiesFactory.cpp

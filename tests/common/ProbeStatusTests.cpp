@@ -22,12 +22,10 @@ TEST(ProbeStatusTest, serializationOfStringRawData)
 
 TEST(ProbeStatusTest, serializationOfSmartRawData)
 {
-    SmartData smart{ .smartData =
-        {
-            {SmartData::TotalLBAsWritten, {1,2,3}},
-            {SmartData::HighFlyWrites, {8,9,4}}
-        }
-    };
+    SmartData smart{ .attributes = {
+        {0xF1, "Total_LBAs_Written", 1, 2, 0, 3},
+        {0xBD, "High_Fly_Writes", 8, 9, 0, 4}
+    }};
 
     nlohmann::json smartJson;
     to_json(smartJson, smart);

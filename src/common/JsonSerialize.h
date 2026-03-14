@@ -20,16 +20,23 @@ inline void from_json(const nlohmann::json& j, GeneralHealth::Health& h)
 }
 
 
-// SmartData::AttrData
-inline void to_json(nlohmann::json& j, const SmartData::AttrData& a)
+// SmartData::Attribute
+inline void to_json(nlohmann::json& j, const SmartData::Attribute& a)
 {
-    j = nlohmann::json{{"value", a.value}, {"worst", a.worst}, {"rawVal", a.rawVal}};
+    j = nlohmann::json{
+        {"id", a.id}, {"name", a.name},
+        {"value", a.value}, {"worst", a.worst},
+        {"threshold", a.threshold}, {"rawVal", a.rawVal}
+    };
 }
 
-inline void from_json(const nlohmann::json& j, SmartData::AttrData& a)
+inline void from_json(const nlohmann::json& j, SmartData::Attribute& a)
 {
+    j.at("id").get_to(a.id);
+    j.at("name").get_to(a.name);
     j.at("value").get_to(a.value);
     j.at("worst").get_to(a.worst);
+    j.at("threshold").get_to(a.threshold);
     j.at("rawVal").get_to(a.rawVal);
 }
 
@@ -37,26 +44,12 @@ inline void from_json(const nlohmann::json& j, SmartData::AttrData& a)
 // SmartData
 inline void to_json(nlohmann::json& j, const SmartData& s)
 {
-    nlohmann::json attrs = nlohmann::json::object();
-    for (const auto& [attr, data] : s.smartData)
-        attrs[SmartData::GetAttrTypeName(attr)] = data;
-
-    j = nlohmann::json{{"attributes", attrs}};
+    j = nlohmann::json{{"attributes", s.attributes}};
 }
 
 inline void from_json(const nlohmann::json& j, SmartData& s)
 {
-    s.smartData.clear();
-    const auto& attrs = j.at("attributes");
-
-    // Build reverse lookup from name to SmartAttribute
-    for (int id = 0x01; id <= 0xFE; ++id)
-    {
-        auto attr = static_cast<SmartData::SmartAttribute>(id);
-        std::string name = SmartData::GetAttrTypeName(attr);
-        if (name != "Unknown Attribute" && attrs.contains(name))
-            attrs.at(name).get_to(s.smartData[attr]);
-    }
+    j.at("attributes").get_to(s.attributes);
 }
 
 
