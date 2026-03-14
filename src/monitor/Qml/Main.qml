@@ -73,12 +73,6 @@ ApplicationWindow {
 
                     delegate: AgentCard {
                         required property int index
-                        required property string agentName
-                        required property int agentHealth
-                        required property int agentDetectionType
-                        required property string agentHost
-                        required property int agentPort
-                        required property int agentConnectionState
                         required property var agentDiskInfoNames
                         required property var agentDiskInfoData
 

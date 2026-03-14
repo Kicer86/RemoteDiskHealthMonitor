@@ -34,13 +34,16 @@ void AgentsStatusProvider::unobserve(const AgentInformation& info)
     if (it == m_connections.end())
         return;
 
-    if (it->sseReply)
-    {
-        it->sseReply->abort();
-        it->sseReply->deleteLater();
-    }
-
+    QNetworkReply* reply = it->sseReply;
+    it->sseReply = nullptr;
     m_connections.erase(it);
+
+    if (reply)
+    {
+        reply->disconnect(this);
+        reply->abort();
+        reply->deleteLater();
+    }
 }
 
 
