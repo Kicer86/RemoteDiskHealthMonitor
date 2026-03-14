@@ -14,6 +14,16 @@ Disk::Disk(const std::string& _deviceId, const std::string& _model)
 {
 }
 
+Disk::Disk(const std::string& _deviceId, const std::string& _model,
+           uint64_t capacity, const std::string& driveType)
+    : m_deviceId(_deviceId)
+    , m_model(_model)
+    , m_vendor(detectVendor(_model))
+    , m_capacity(capacity)
+    , m_driveType(driveType)
+{
+}
+
 const std::string& Disk::GetDeviceId() const
 {
     return m_deviceId;
@@ -27,6 +37,16 @@ const std::string& Disk::GetModel() const
 const std::string& Disk::GetVendor() const
 {
     return m_vendor;
+}
+
+uint64_t Disk::GetCapacity() const
+{
+    return m_capacity;
+}
+
+const std::string& Disk::GetDriveType() const
+{
+    return m_driveType;
 }
 
 std::string Disk::detectVendor(const std::string& model)

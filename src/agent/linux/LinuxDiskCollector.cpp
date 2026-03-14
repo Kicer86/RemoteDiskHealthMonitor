@@ -6,6 +6,29 @@
 #include <algorithm>
 
 
+namespace
+{
+    std::string detectDriveType(const std::string& name)
+    {
+        if (name.find("nvme") == 0)
+            return "NVMe";
+
+        std::ifstream rotFile("/sys/block/" + name + "/queue/rotational");
+        if (rotFile.is_open())
+        {
+            int rotational = -1;
+            rotFile >> rotational;
+            if (rotational == 1)
+                return "HDD";
+            if (rotational == 0)
+                return "SSD";
+        }
+
+        return {};
+    }
+}
+
+
 LinuxDiskCollector::LinuxDiskCollector(const std::vector<LsblkOutputParser::LsblkEntry>& lsblkEntries)
     : m_lsblkEntries(lsblkEntries)
 {
@@ -29,7 +52,8 @@ std::vector<Disk> LinuxDiskCollector::GetDisksList()
                 model.pop_back();
         }
 
-        disks.emplace_back(entry.name, model);
+        const auto driveType = detectDriveType(entry.name);
+        disks.emplace_back(entry.name, model, entry.size, driveType);
     }
 
     return disks;
