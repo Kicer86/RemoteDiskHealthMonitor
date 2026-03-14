@@ -7,6 +7,7 @@ add_library(common OBJECT
     SmartData.cpp
     SmartData.h
     GeneralHealth.cpp
+    DiskSummary.h
     DiskInfo.h
     DiskInfo.cpp
     JsonSerialize.h)

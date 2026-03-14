@@ -286,4 +286,87 @@ namespace SmartCtlOutputParser
 
         return table;
     }
+
+    SmartTestStatus parseTestStatus(const std::string& smartCtlOutput)
+    {
+        SmartTestStatus status;
+        const auto lines = ParsersUtils::clean(smartCtlOutput);
+
+        // Parse "Self-test execution status" for running test
+        for (size_t i = 0; i < lines.size(); ++i)
+        {
+            const auto& line = lines[i];
+            if (line.find("Self-test execution status:") != std::string::npos)
+            {
+                // Extract status code from parenthesized value
+                auto parenOpen = line.find('(');
+                auto parenClose = line.find(')');
+                if (parenOpen != std::string::npos && parenClose != std::string::npos)
+                {
+                    try
+                    {
+                        int code = std::stoi(simplified(line.substr(parenOpen + 1, parenClose - parenOpen - 1)));
+                        // Bits 7:4 encode status, bits 3:0 encode percent remaining / 10
+                        // Status 15 (0xF_) = test in progress
+                        if ((code >> 4) == 15)
+                        {
+                            status.running = true;
+                            status.percentRemaining = (code & 0x0F) * 10;
+                        }
+                    }
+                    catch (const std::exception&) {}
+                }
+                break;
+            }
+        }
+
+        // Parse "SMART Self-test log" for last completed result
+        for (size_t i = 0; i < lines.size(); ++i)
+        {
+            const auto& line = lines[i];
+            if (line.find("SMART Self-test log") != std::string::npos)
+            {
+                // Skip header lines until we find "# 1" (most recent test)
+                for (size_t j = i + 1; j < lines.size(); ++j)
+                {
+                    const auto trimmed = simplified(lines[j]);
+                    if (trimmed.find("# 1") == 0)
+                    {
+                        // Format: # 1  Test_Description    Status    Remaining%  LifeTime  LBA
+                        // Status is between description and remaining% columns
+                        // Find "Completed" or "Interrupted" or "read failure" etc.
+                        if (trimmed.find("Completed without error") != std::string::npos)
+                            status.lastResult = "Completed without error";
+                        else if (trimmed.find("Completed: read failure") != std::string::npos)
+                            status.lastResult = "Completed: read failure";
+                        else if (trimmed.find("Interrupted") != std::string::npos)
+                            status.lastResult = "Interrupted";
+                        else if (trimmed.find("Aborted by host") != std::string::npos)
+                            status.lastResult = "Aborted by host";
+                        else if (trimmed.find("in progress") != std::string::npos)
+                            status.lastResult = "Self-test in progress";
+                        else
+                        {
+                            // Extract status text between test type and remaining%
+                            auto pctPos = trimmed.find('%');
+                            if (pctPos != std::string::npos)
+                            {
+                                // Walk backward from '%' to get remaining + status
+                                // The status text is between the second and third+ columns
+                                status.lastResult = "Unknown";
+                            }
+                        }
+                        break;
+                    }
+                    if (trimmed.find("No self-tests") != std::string::npos)
+                        break;
+                    if (trimmed.empty())
+                        break;
+                }
+                break;
+            }
+        }
+
+        return status;
+    }
 }

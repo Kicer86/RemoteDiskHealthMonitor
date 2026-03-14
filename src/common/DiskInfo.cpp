@@ -41,3 +41,13 @@ const std::vector<ProbeStatus> & DiskInfo::GetProbesStatuses() const
 {
     return m_statuses;
 }
+
+void DiskInfo::SetSummary(const DiskSummary& summary)
+{
+    m_summary = summary;
+}
+
+const DiskSummary& DiskInfo::GetSummary() const
+{
+    return m_summary;
+}

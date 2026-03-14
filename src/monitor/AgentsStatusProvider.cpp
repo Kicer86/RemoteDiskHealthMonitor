@@ -220,6 +220,12 @@ void AgentsStatusProvider::parseStatusJson(const AgentInformation& info, const Q
             std::vector<DiskInfo> disks = j.at("disks").get<std::vector<DiskInfo>>();
             emit diskCollectionChanged(info, disks);
         }
+
+        if (j.contains("lastRefreshed"))
+        {
+            QString ts = QString::fromStdString(j.at("lastRefreshed").get<std::string>());
+            emit lastRefreshedChanged(info, ts);
+        }
     }
     catch (const std::exception& e)
     {
