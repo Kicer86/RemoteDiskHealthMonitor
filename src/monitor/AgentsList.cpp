@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AgentsList.hpp"
+#include "common/JsonSerialize.h"
 
 
 using namespace std::placeholders;
@@ -125,33 +126,14 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
                 {
                     nlohmann::json diskJson;
                     diskJson["name"] = disk.GetName();
-                    diskJson["health"] = disk.GetHealth();
-
-                    const auto& summary = disk.GetSummary();
-                    nlohmann::json summaryJson;
-                    summaryJson["model"] = summary.model;
-                    summaryJson["vendor"] = summary.vendor;
-                    summaryJson["capacityBytes"] = summary.capacityBytes;
-                    summaryJson["driveType"] = summary.driveType;
-                    if (summary.temperatureC)
-                        summaryJson["temperatureC"] = *summary.temperatureC;
-                    if (summary.powerOnHours)
-                        summaryJson["powerOnHours"] = *summary.powerOnHours;
-                    if (summary.selfTestStatus)
-                    {
-                        summaryJson["selfTestStatus"] = {
-                            {"running", summary.selfTestStatus->running},
-                            {"percentRemaining", summary.selfTestStatus->percentRemaining},
-                            {"lastResult", summary.selfTestStatus->lastResult}
-                        };
-                    }
-                    diskJson["summary"] = summaryJson;
+                    diskJson["health"] = static_cast<int>(disk.GetHealth());
+                    diskJson["summary"] = disk.GetSummary();
 
                     nlohmann::json probesJson = nlohmann::json::array();
                     for (const auto& probe : disk.GetProbesStatuses())
                     {
                         nlohmann::json probeJson;
-                        probeJson["health"] = probe.health;
+                        probeJson["health"] = static_cast<int>(probe.health);
                         if (probe.rawData.is_object())
                             probeJson.update(probe.rawData);
                         else
