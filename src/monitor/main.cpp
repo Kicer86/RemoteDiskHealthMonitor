@@ -1,8 +1,9 @@
 
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QWindow>
 
 #include "AgentsList.hpp"
 #include "AgentsExplorer.hpp"
@@ -10,6 +11,7 @@
 #include "ManualAgentsValidator.hpp"
 #include "HealthEnumQml.hpp"
 #include "Configuration.hpp"
+#include "TrayIcon.hpp"
 
 
 namespace
@@ -38,8 +40,9 @@ namespace
 
 int main(int argc, char** argv)
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     QQuickStyle::setStyle("Fusion");
+    app.setQuitOnLastWindowClosed(false);
 
     Configuration config;
 
@@ -64,6 +67,10 @@ int main(int argc, char** argv)
 
     if (engine.rootObjects().isEmpty())
         return -1;
+
+    TrayIcon trayIcon(activeAgents);
+    auto* window = qobject_cast<QWindow*>(engine.rootObjects().first());
+    trayIcon.setWindow(window);
 
     restoreHardcodedAgents(config, activeAgents);
 
