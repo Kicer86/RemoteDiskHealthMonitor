@@ -12,6 +12,13 @@
 LinGeneralAnalyzer::LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager> manager)
     : m_partitionsManager(manager)
 {
+    FILE* pipe = popen("which journalctl", "r");
+    if (pipe)
+    {
+        char buf[256];
+        m_useJournalctl = (fgets(buf, sizeof(buf), pipe) != nullptr);
+        pclose(pipe);
+    }
 }
 
 
@@ -57,7 +64,11 @@ void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
     std::string output;
     std::array<char, 4096> buffer;
 
-    FILE* pipe = popen("dmesg", "r");
+    const char* cmd = m_useJournalctl
+        ? "journalctl -k --cursor-file=/tmp/rdhm-journal-cursor --no-pager -q --output=short"
+        : "dmesg";
+
+    FILE* pipe = popen(cmd, "r");
     if (pipe)
     {
         while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
@@ -65,5 +76,18 @@ void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
         pclose(pipe);
     }
 
-    m_errors = DmesgParser::parse(output, *m_partitionsManager);
+    auto newErrors = DmesgParser::parse(output, *m_partitionsManager);
+
+    if (m_useJournalctl)
+    {
+        // journalctl with cursor-file returns only new entries;
+        // accumulate into existing errors
+        for (auto& [disk, errors] : newErrors)
+            m_errors[disk].merge(std::move(errors));
+    }
+    else
+    {
+        // dmesg reads the full ring buffer; replace entirely
+        m_errors = std::move(newErrors);
+    }
 }

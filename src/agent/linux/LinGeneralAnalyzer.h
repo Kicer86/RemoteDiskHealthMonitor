@@ -25,4 +25,5 @@ public:
 private:
     std::map<Disk, std::set<std::string>> m_errors;
     std::shared_ptr<IPartitionsManager> m_partitionsManager;
+    bool m_useJournalctl = false;
 };
