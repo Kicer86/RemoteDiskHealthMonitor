@@ -43,7 +43,6 @@ private:
     QHash<AgentInformation, AgentConnection> m_connections;
     QTimer m_watchdog;
 
-    void fetchInitialStatus(const AgentInformation& info);
     void fetchAgentInfo(const AgentInformation& info);
     void connectSse(const AgentInformation& info);
     void handleSseEvent(const AgentInformation& info, const cpp_restapi::SseEvent& event);
