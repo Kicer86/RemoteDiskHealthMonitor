@@ -14,6 +14,11 @@ ApplicationWindow {
 
     color: palette.window
 
+    onClosing: function(close) {
+        close.accepted = false
+        root.hide()
+    }
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
