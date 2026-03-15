@@ -25,6 +25,9 @@ public:
     // Called to trigger data refresh; the callback does collection and calls setStatusData
     void setRefreshCallback(std::function<void()> cb);
 
+    // Called when a new SSE client connects
+    void setOnClientConnectedCallback(std::function<void()> cb);
+
 private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;

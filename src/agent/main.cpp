@@ -1,8 +1,13 @@
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 
 #include "common/constants.hpp"
 #include "common/DiskSummary.h"
@@ -15,12 +20,22 @@
 namespace
 {
     HttpServer* g_server = nullptr;
+    std::atomic<bool> g_running{true};
+    std::mutex g_bgMutex;
+    std::condition_variable g_bgCv;
 
     void signalHandler(int)
     {
+        g_running = false;
         if (g_server)
             g_server->stop();
     }
+
+    struct ProbeEntry
+    {
+        std::unique_ptr<IProbe> probe;
+        std::chrono::steady_clock::time_point lastRefresh{};
+    };
 
     DiskSummary buildSummary(const Disk& disk, const std::vector<ProbeStatus>& probeStatuses)
     {
@@ -75,49 +90,85 @@ namespace
 
         return summary;
     }
-}
 
-
-void collectAndPublish(HttpServer& server, SystemUtilitiesFactory& factory)
-{
-    auto diskCollector = factory.diskCollector();
-    auto diskCollection = diskCollector->GetDisksList();
-    const auto probes = factory.getProbes();
-
-    // Refresh all probes before reading cached data
-    for (const auto& probe : probes)
-        probe->Refresh(diskCollection);
-
-    DiscStatusCalculator calc;
-    std::vector<DiskInfo> diskInfos;
-
-    for (const auto& disk : diskCollection)
+    // Returns true if any probe was refreshed
+    bool refreshStaleProbes(std::vector<ProbeEntry>& entries,
+                            const std::vector<Disk>& disks,
+                            bool proactiveOnly = false)
     {
-        std::vector<ProbeStatus> probeStatuses;
-        probeStatuses.reserve(probes.size());
+        bool anyRefreshed = false;
+        const auto now = std::chrono::steady_clock::now();
 
-        for (const auto& probe : probes)
+        for (auto& entry : entries)
         {
-            ProbeStatus status;
-            status.health = probe->GetStatus(disk);
-            status.rawData = probe->GetRawData(disk);
-            probeStatuses.push_back(status);
+            const auto policy = entry.probe->GetRefreshPolicy();
+
+            if (proactiveOnly && !policy.proactiveCollection)
+                continue;
+
+            const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+                now - entry.lastRefresh);
+
+            if (elapsed >= policy.interval)
+            {
+                entry.probe->Refresh(disks);
+                entry.lastRefresh = now;
+                anyRefreshed = true;
+            }
         }
 
-        DiskInfo info;
-        info.SetName(disk.GetDeviceId());
-        info.SetHealth(calc.CalculateDiskStatus(disk, probes));
-        info.SetProbesStatuses(probeStatuses);
-        info.SetSummary(buildSummary(disk, probeStatuses));
-        diskInfos.push_back(info);
+        return anyRefreshed;
     }
 
-    std::vector<GeneralHealth::Health> statuses;
-    std::transform(diskInfos.begin(), diskInfos.end(), std::back_inserter(statuses),
-                   [](const auto& di) { return di.GetHealth(); });
+    void refreshAllProbes(std::vector<ProbeEntry>& entries,
+                          const std::vector<Disk>& disks)
+    {
+        const auto now = std::chrono::steady_clock::now();
+        for (auto& entry : entries)
+        {
+            entry.probe->Refresh(disks);
+            entry.lastRefresh = now;
+        }
+    }
 
-    auto overall = calc.CalculateCumulativeStatus(statuses);
-    server.setStatusData(overall, std::move(diskInfos));
+    void publishFromCache(HttpServer& server,
+                          const std::vector<ProbeEntry>& entries,
+                          const std::vector<Disk>& disks)
+    {
+        DiscStatusCalculator calc;
+        std::vector<DiskInfo> diskInfos;
+
+        for (const auto& disk : disks)
+        {
+            std::vector<ProbeStatus> probeStatuses;
+            std::vector<GeneralHealth::Health> healthStatuses;
+
+            for (const auto& entry : entries)
+            {
+                ProbeStatus status;
+                status.health = entry.probe->GetStatus(disk);
+                status.rawData = entry.probe->GetRawData(disk);
+                probeStatuses.push_back(status);
+                healthStatuses.push_back(status.health);
+            }
+
+            DiskInfo info;
+            info.SetName(disk.GetDeviceId());
+            info.SetHealth(calc.CalculateCumulativeStatus(healthStatuses));
+            info.SetProbesStatuses(probeStatuses);
+            info.SetSummary(buildSummary(disk, probeStatuses));
+            diskInfos.push_back(info);
+        }
+
+        std::vector<GeneralHealth::Health> statuses;
+        std::transform(diskInfos.begin(), diskInfos.end(), std::back_inserter(statuses),
+                       [](const auto& di) { return di.GetHealth(); });
+
+        auto overall = calc.CalculateCumulativeStatus(statuses);
+        server.setStatusData(overall, std::move(diskInfos));
+    }
+
+    std::mutex g_probeMutex;
 }
 
 
@@ -152,15 +203,35 @@ int main(int argc, char** argv)
     for (const auto& disk : disks)
         std::cout << "  " << disk.GetDeviceId() << '\n';
 
+    // Create persistent probes
+    auto probeUptrs = systemUtilsFactory.getProbes();
+    std::vector<ProbeEntry> probeEntries;
+    for (auto& p : probeUptrs)
+        probeEntries.push_back({std::move(p), {}});
+
     // Create HTTP server
     HttpServer server(agentName, RDHMPort);
 
-    server.setRefreshCallback([&server, &systemUtilsFactory] {
-        collectAndPublish(server, systemUtilsFactory);
+    // POST /api/v1/refresh — force refresh all probes (manual trigger)
+    server.setRefreshCallback([&server, &probeEntries, &disks] {
+        std::lock_guard lock(g_probeMutex);
+        refreshAllProbes(probeEntries, disks);
+        publishFromCache(server, probeEntries, disks);
     });
 
-    // Initial data collection
-    collectAndPublish(server, systemUtilsFactory);
+    // SSE client connected — refresh stale probes
+    server.setOnClientConnectedCallback([&server, &probeEntries, &disks] {
+        std::lock_guard lock(g_probeMutex);
+        if (refreshStaleProbes(probeEntries, disks))
+            publishFromCache(server, probeEntries, disks);
+    });
+
+    // Initial proactive data collection
+    {
+        std::lock_guard lock(g_probeMutex);
+        refreshStaleProbes(probeEntries, disks, true);
+        publishFromCache(server, probeEntries, disks);
+    }
 
     // Start mDNS publisher
     MdnsPublisher mdns(agentName, ZeroConfServiceName, RDHMPort);
@@ -173,10 +244,33 @@ int main(int argc, char** argv)
 
     std::cout << "Agent '" << agentName << "' listening on 0.0.0.0:" << RDHMPort << "\n";
 
+    // Background thread for proactive probes
+    std::thread bgThread([&server, &probeEntries, &disks] {
+        while (g_running)
+        {
+            {
+                std::unique_lock lock(g_bgMutex);
+                g_bgCv.wait_for(lock, std::chrono::minutes(1),
+                                [] { return !g_running.load(); });
+            }
+
+            if (!g_running)
+                break;
+
+            std::lock_guard lock(g_probeMutex);
+            if (refreshStaleProbes(probeEntries, disks, true))
+                publishFromCache(server, probeEntries, disks);
+        }
+    });
+
     // Blocking — runs the HTTP server
     server.listen();
 
     // Cleanup
+    g_running = false;
+    g_bgCv.notify_all();
+    bgThread.join();
+
     mdns.stop();
     g_server = nullptr;
 

@@ -40,6 +40,7 @@ struct HttpServer::Impl
     std::string lastRefreshed;
 
     std::function<void()> refreshCallback;
+    std::function<void()> onClientConnectedCallback;
 
     // Refresh cooldown
     static constexpr int RefreshCooldownSeconds = 600;  // 10 minutes
@@ -190,6 +191,10 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
             m_impl->sseClients.push_back(client);
         }
 
+        // Notify that a new monitor connected — may trigger conditional refresh
+        if (m_impl->onClientConnectedCallback)
+            m_impl->onClientConnectedCallback();
+
         res.set_header("Cache-Control", "no-cache");
         res.set_header("Connection", "keep-alive");
 
@@ -268,4 +273,10 @@ void HttpServer::stop()
 void HttpServer::setRefreshCallback(std::function<void()> cb)
 {
     m_impl->refreshCallback = std::move(cb);
+}
+
+
+void HttpServer::setOnClientConnectedCallback(std::function<void()> cb)
+{
+    m_impl->onClientConnectedCallback = std::move(cb);
 }
