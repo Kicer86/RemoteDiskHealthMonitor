@@ -13,3 +13,6 @@
 [submodule "external/QtZeroConf"]
 	path = external/QtZeroConf
 	url = https://github.com/jbagg/QtZeroConf.git
+[submodule "external/cpp_restapi"]
+	path = external/cpp_restapi
+	url = https://github.com/Kicer86/cpp_restapi.git
