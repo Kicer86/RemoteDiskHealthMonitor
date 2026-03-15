@@ -1,5 +1,5 @@
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Gui Network QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Quick Gui Network QuickControls2 Widgets)
 
 qt_add_executable(monitor
     AgentsList.cpp
@@ -17,6 +17,8 @@ qt_add_executable(monitor
     main.cpp
     ManualAgentsValidator.cpp
     ManualAgentsValidator.hpp
+    TrayIcon.cpp
+    TrayIcon.hpp
 )
 
 set_target_properties(monitor PROPERTIES AUTOMOC TRUE)
@@ -52,6 +54,7 @@ target_link_libraries(monitor
         Qt::Quick
         Qt::Gui
         Qt::QuickControls2
+        Qt::Widgets
         QtZeroConf
 )
 
