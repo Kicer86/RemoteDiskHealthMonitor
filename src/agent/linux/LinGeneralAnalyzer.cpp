@@ -12,7 +12,12 @@
 LinGeneralAnalyzer::LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager> manager)
     : m_partitionsManager(manager)
 {
-    refreshState();
+}
+
+
+RefreshPolicy LinGeneralAnalyzer::GetRefreshPolicy() const
+{
+    return {std::chrono::hours(1), true};
 }
 
 
@@ -47,7 +52,7 @@ nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
 }
 
 
-void LinGeneralAnalyzer::refreshState()
+void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
 {
     std::string output;
     std::array<char, 4096> buffer;

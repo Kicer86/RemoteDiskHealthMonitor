@@ -59,6 +59,22 @@ SmartHealthAnalyzer::SmartHealthAnalyzer(std::unique_ptr<ISmartReader> reader)
 SmartHealthAnalyzer::~SmartHealthAnalyzer() = default;
 
 
+RefreshPolicy SmartHealthAnalyzer::GetRefreshPolicy() const
+{
+    return {std::chrono::hours(4), false};
+}
+
+
+void SmartHealthAnalyzer::Refresh(const std::vector<Disk>& disks)
+{
+    for (const auto& disk : disks)
+    {
+        m_cachedSmartData[disk.GetDeviceId()] = m_reader->ReadSMARTData(disk);
+        m_cachedTestStatus[disk.GetDeviceId()] = m_reader->ReadTestStatus(disk);
+    }
+}
+
+
 const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
 {
     static const GenericProfile generic;
@@ -76,7 +92,11 @@ const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
 
 GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 {
-    const auto smart = m_reader->ReadSMARTData(disk);
+    auto it = m_cachedSmartData.find(disk.GetDeviceId());
+    if (it == m_cachedSmartData.end())
+        return GeneralHealth::UNKNOWN;
+
+    const auto& smart = it->second;
     const auto& profile = profileFor(disk.GetVendor());
 
     auto worst = GeneralHealth::GOOD;
@@ -128,7 +148,11 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 
 nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
 {
-    const auto smart = m_reader->ReadSMARTData(disk);
+    auto it = m_cachedSmartData.find(disk.GetDeviceId());
+    if (it == m_cachedSmartData.end())
+        return nlohmann::json{{"type", "smart"}, {"attributes", nlohmann::json::array()}};
+
+    const auto& smart = it->second;
 
     nlohmann::json attrs = nlohmann::json::array();
     for (const auto& attr : smart.attributes)
@@ -145,7 +169,11 @@ nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
 
     auto j = nlohmann::json{{"type", "smart"}, {"attributes", attrs}};
 
-    const auto testStatus = m_reader->ReadTestStatus(disk);
+    auto testIt = m_cachedTestStatus.find(disk.GetDeviceId());
+    SmartTestStatus testStatus;
+    if (testIt != m_cachedTestStatus.end())
+        testStatus = testIt->second;
+
     j["selfTestStatus"] = {
         {"running", testStatus.running},
         {"percentRemaining", testStatus.percentRemaining},

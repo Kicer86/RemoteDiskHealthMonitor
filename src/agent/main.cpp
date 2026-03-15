@@ -84,6 +84,10 @@ void collectAndPublish(HttpServer& server, SystemUtilitiesFactory& factory)
     auto diskCollection = diskCollector->GetDisksList();
     const auto probes = factory.getProbes();
 
+    // Refresh all probes before reading cached data
+    for (const auto& probe : probes)
+        probe->Refresh(diskCollection);
+
     DiscStatusCalculator calc;
     std::vector<DiskInfo> diskInfos;
 

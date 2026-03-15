@@ -44,6 +44,8 @@ TEST_F(SmartHealthAnalyzerTest, AllHealthyAttributesReturnGood)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
@@ -58,6 +60,8 @@ TEST_F(SmartHealthAnalyzerTest, ValueBelowThresholdReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -71,6 +75,8 @@ TEST_F(SmartHealthAnalyzerTest, ValueEqualToThresholdReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -84,6 +90,8 @@ TEST_F(SmartHealthAnalyzerTest, CriticalAttributeWithNonZeroRawReturnsCheckStatu
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
 }
@@ -98,6 +106,8 @@ TEST_F(SmartHealthAnalyzerTest, ProximityToThresholdReturnsCheckStatus)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
 }
@@ -111,6 +121,8 @@ TEST_F(SmartHealthAnalyzerTest, ValueWellAboveThresholdIsGood)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
@@ -129,6 +141,8 @@ TEST_F(SmartHealthAnalyzerTest, SamsungProfileMasksRawReadErrorRate)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({samsungDisk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(samsungDisk));
 }
@@ -145,6 +159,8 @@ TEST_F(SmartHealthAnalyzerTest, SamsungProfileDetectsRealErrors)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({samsungDisk});
 
     // ID 1 is not in the critical list, so non-zero raw alone doesn't trigger
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(samsungDisk));
@@ -162,6 +178,8 @@ TEST_F(SmartHealthAnalyzerTest, SeagateProfileMasksSeekErrorRate)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
@@ -179,6 +197,8 @@ TEST_F(SmartHealthAnalyzerTest, UnknownVendorUsesGenericProfile)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
 }
@@ -194,6 +214,7 @@ TEST_F(SmartHealthAnalyzerTest, GetRawDataReturnsSmartJsonFormat)
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
     EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     auto json = m_analyzer->GetRawData(m_disk);
 
@@ -220,6 +241,8 @@ TEST_F(SmartHealthAnalyzerTest, EmptySmartDataReturnsGood)
     SmartData data;  // no attributes
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
@@ -234,6 +257,8 @@ TEST_F(SmartHealthAnalyzerTest, ZeroThresholdSkipsThresholdChecks)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
@@ -250,6 +275,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmeCriticalWarningNonZeroReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -264,6 +291,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmeMediaIntegrityErrorsReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -278,6 +307,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmePercentageUsedHighReturnsCheckStatus)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
 }
@@ -292,6 +323,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmePercentageUsed100ReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -306,6 +339,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmeAvailableSpareThresholdBreachReturnsBad)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::BAD, m_analyzer->GetStatus(m_disk));
 }
@@ -324,6 +359,8 @@ TEST_F(SmartHealthAnalyzerTest, NvmeHealthyReturnGood)
     };
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
+    EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
+    m_analyzer->Refresh({m_disk});
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }

@@ -16,12 +16,13 @@ class LinGeneralAnalyzer : public IProbe
 public:
     LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager>);
 
+    RefreshPolicy GetRefreshPolicy() const override;
+    void Refresh(const std::vector<Disk>& disks) override;
+
     GeneralHealth::Health GetStatus(const Disk& disk) override;
     nlohmann::json GetRawData(const Disk& disk) override;
 
 private:
     std::map<Disk, std::set<std::string>> m_errors;
     std::shared_ptr<IPartitionsManager> m_partitionsManager;
-
-    void refreshState();
 };
