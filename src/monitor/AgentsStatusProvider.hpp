@@ -1,10 +1,15 @@
 
 #pragma once
 
+#include <chrono>
+#include <memory>
+
 #include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QHash>
 #include <QTimer>
+
+#include <cpp_restapi/iconnection.hpp>
+#include <cpp_restapi/isse_connection.hpp>
 
 #include "IAgentsStatusProvider.hpp"
 
@@ -20,20 +25,26 @@ public:
 
 private:
     struct AgentConnection {
-        QNetworkReply* sseReply = nullptr;
-        QByteArray sseBuffer;
+        std::shared_ptr<cpp_restapi::IConnection> connection;
+        std::shared_ptr<cpp_restapi::ISseConnection> sseConnection;
+        std::chrono::steady_clock::time_point lastEventTime{};
         int reconnectDelayMs = 1000;
+        bool connected = false;
     };
 
     static constexpr int MaxReconnectDelayMs = 30000;
+    static constexpr int WatchdogIntervalMs = 15000;
+    static constexpr std::chrono::seconds WatchdogTimeoutS{45};
 
     QNetworkAccessManager m_nam;
     QHash<AgentInformation, AgentConnection> m_connections;
+    QTimer m_watchdog;
 
     void fetchInitialStatus(const AgentInformation& info);
     void fetchAgentInfo(const AgentInformation& info);
     void connectSse(const AgentInformation& info);
-    void processSseData(const AgentInformation& info);
+    void handleSseEvent(const AgentInformation& info, const cpp_restapi::SseEvent& event);
     void parseStatusJson(const AgentInformation& info, const QByteArray& json);
     void scheduleSseReconnect(const AgentInformation& info);
+    void checkConnections();
 };
