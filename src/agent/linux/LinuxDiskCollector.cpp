@@ -1,10 +1,47 @@
 
-#include <QDebug>
-#include <QProcess>
-
-#include "common/OutputParsersUtils.h"
 #include "LinuxDiskCollector.h"
 #include "LsblkOutputParser.h"
+
+#include <fstream>
+#include <algorithm>
+
+
+namespace
+{
+    bool isRemovable(const std::string& name)
+    {
+        std::ifstream removableFile("/sys/block/" + name + "/removable");
+        if (removableFile.is_open())
+        {
+            int val = 0;
+            removableFile >> val;
+            return val == 1;
+        }
+        return false;
+    }
+
+    std::string detectDriveType(const std::string& name)
+    {
+        if (name.find("nvme") == 0)
+            return "NVMe";
+
+        if (isRemovable(name))
+            return "USB";
+
+        std::ifstream rotFile("/sys/block/" + name + "/queue/rotational");
+        if (rotFile.is_open())
+        {
+            int rotational = -1;
+            rotFile >> rotational;
+            if (rotational == 1)
+                return "HDD";
+            if (rotational == 0)
+                return "SSD";
+        }
+
+        return {};
+    }
+}
 
 
 LinuxDiskCollector::LinuxDiskCollector(const std::vector<LsblkOutputParser::LsblkEntry>& lsblkEntries)
@@ -20,19 +57,28 @@ std::vector<Disk> LinuxDiskCollector::GetDisksList()
 
     for (const auto& entry: m_lsblkEntries)
     {
-        const Disk disk(entry.name.toStdString());
+        std::string model;
+        std::ifstream modelFile("/sys/block/" + entry.name + "/device/model");
+        if (modelFile.is_open())
+        {
+            std::getline(modelFile, model);
+            // trim trailing whitespace
+            while (!model.empty() && (model.back() == ' ' || model.back() == '\t'))
+                model.pop_back();
+        }
 
-        disks.push_back(disk);
+        const auto driveType = detectDriveType(entry.name);
+        disks.emplace_back(entry.name, model, entry.size, driveType);
     }
 
     return disks;
 }
 
 
-bool LinuxDiskCollector::isPartition(const QString& deviceName) const
+bool LinuxDiskCollector::isPartition(const std::string& deviceName) const
 {
     for(const auto& entry: m_lsblkEntries)
-        for(const QString& partitionDevice: entry.partitions)
+        for(const auto& partitionDevice: entry.partitions)
             if (partitionDevice == deviceName)
                 return true;
 
@@ -40,10 +86,10 @@ bool LinuxDiskCollector::isPartition(const QString& deviceName) const
 }
 
 
-QString LinuxDiskCollector::diskForPartition(const QString& deviceName) const
+std::string LinuxDiskCollector::diskForPartition(const std::string& deviceName) const
 {
     for(const auto& entry: m_lsblkEntries)
-        for(const QString& partitionDevice: entry.partitions)
+        for(const auto& partitionDevice: entry.partitions)
             if (partitionDevice == deviceName)
                 return entry.name;
 

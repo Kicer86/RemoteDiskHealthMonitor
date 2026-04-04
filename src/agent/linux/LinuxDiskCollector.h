@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <QString>
+#include <string>
 
 #include "../IDiskCollector.h"
 #include "IPartitionsManager.h"
@@ -15,8 +15,8 @@ public:
 
     std::vector<Disk> GetDisksList() override;
 
-    bool isPartition(const QString & deviceName) const override;
-    QString diskForPartition(const QString & deviceName) const override;
+    bool isPartition(const std::string& deviceName) const override;
+    std::string diskForPartition(const std::string& deviceName) const override;
 
 private:
     std::vector<LsblkOutputParser::LsblkEntry> m_lsblkEntries;

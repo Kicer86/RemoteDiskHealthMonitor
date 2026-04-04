@@ -1,0 +1,154 @@
+name: Package Build
+
+on: [pull_request]
+
+jobs:
+  deb:
+    name: Debian packages (Ubuntu)
+    runs-on: ubuntu-latest
+    container: ubuntu:25.04
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [rdhm-agent, rdhm-monitor]
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+    - name: Install base tools
+      run: apt-get update && apt-get install -y git ca-certificates
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install common build dependencies
+      run: |
+        apt-get install -y \
+          build-essential cmake pkg-config debhelper devscripts \
+          fakeroot dpkg-dev
+
+    - name: Install monitor build dependencies
+      if: matrix.component == 'rdhm-monitor'
+      run: |
+        apt-get install -y \
+          qt6-base-dev qt6-declarative-dev libqt6quickcontrols2-6 \
+          qt6-base-dev-tools qt6-declarative-dev-tools \
+          libavahi-client-dev qml6-module-qtquick \
+          qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+          libgl1-mesa-dev
+
+    - name: Build package
+      run: |
+        PKG_DIR=$(mktemp -d)
+        cp -a . "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}"
+        cp -a packaging/deb/${{ matrix.component }}/debian \
+              "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}/debian"
+        cd "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}"
+        dpkg-buildpackage -b -us -uc
+        ls -lh "$PKG_DIR"/*.deb
+      env:
+        VERSION: "0.2.0"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: deb-${{ matrix.component }}
+        path: /tmp/tmp.*/**.deb
+        if-no-files-found: warn
+
+  rpm:
+    name: RPM packages (Fedora)
+    runs-on: ubuntu-latest
+    container: fedora:41
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [rdhm-agent, rdhm-monitor]
+    steps:
+    - name: Install base tools
+      run: dnf install -y git
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install common build dependencies
+      run: |
+        dnf install -y \
+          cmake gcc-c++ make rpm-build systemd-rpm-macros
+
+    - name: Install monitor build dependencies
+      if: matrix.component == 'rdhm-monitor'
+      run: |
+        dnf install -y \
+          qt6-qtbase-devel qt6-qtdeclarative-devel \
+          qt6-qtquickcontrols2-devel avahi-devel \
+          mesa-libGL-devel
+
+    - name: Build package
+      run: |
+        RPMBUILD_DIR=$(mktemp -d)
+        mkdir -p "$RPMBUILD_DIR"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+        SPEC="packaging/rpm/${{ matrix.component }}.spec"
+        VERSION=$(grep '^Version:' "$SPEC" | awk '{print $2}')
+        PKG_NAME="${{ matrix.component }}-${VERSION}"
+
+        tar czf "$RPMBUILD_DIR/SOURCES/${PKG_NAME}.tar.gz" \
+          --transform "s,^\.,${PKG_NAME}," \
+          --exclude='.git' --exclude='build' .
+
+        cp "$SPEC" "$RPMBUILD_DIR/SPECS/"
+
+        rpmbuild -bb \
+          --define "_topdir $RPMBUILD_DIR" \
+          "$RPMBUILD_DIR/SPECS/${{ matrix.component }}.spec"
+
+        find "$RPMBUILD_DIR/RPMS/" -name '*.rpm' -exec ls -lh {} \;
+
+  pacman:
+    name: Pacman packages (Arch)
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [rdhm-agent, rdhm-monitor]
+    steps:
+    - name: Install base tools
+      run: |
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm git base-devel cmake sudo
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install monitor build dependencies
+      if: matrix.component == 'rdhm-monitor'
+      run: |
+        pacman -S --noconfirm \
+          qt6-base qt6-declarative avahi
+
+    - name: Build package
+      run: |
+        # makepkg refuses to run as root — create a build user
+        useradd -m builder
+        echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+        BUILD_DIR=$(mktemp -d)
+        PKGBUILD_DIR="packaging/arch/${{ matrix.component }}"
+        VERSION=$(grep '^pkgver=' "$PKGBUILD_DIR/PKGBUILD" | cut -d= -f2)
+        PKG_NAME="${{ matrix.component }}-${VERSION}"
+
+        # Create source tarball that makepkg expects
+        tar czf "$BUILD_DIR/${PKG_NAME}.tar.gz" \
+          --transform "s,^\.,${PKG_NAME}," \
+          --exclude='.git' --exclude='build' .
+
+        cp "$PKGBUILD_DIR"/* "$BUILD_DIR/"
+
+        chown -R builder:builder "$BUILD_DIR"
+        cd "$BUILD_DIR"
+        sudo -u builder makepkg -sf --noconfirm --skipchecksums
+        ls -lh "$BUILD_DIR"/*.pkg.tar.zst

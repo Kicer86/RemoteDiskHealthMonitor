@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QString>
+#include <string>
 
 #include "ProtocolVersion.h"
 
 
-const QString ZeroConfServiceName = "_RDHMonitor._tcp";
-const unsigned int RDHMPort = 1630;
-const ProtocolVersion VersionOfProtocol = ProtocolVersion::VER_1;
-const QString ApplicationShortName = "RDHM";
+inline const std::string ZeroConfServiceName = "_RDHMonitor._tcp";
+inline constexpr unsigned int RDHMPort = 1630;
+inline const ProtocolVersion VersionOfProtocol = ProtocolVersion::VER_1;
+inline const std::string ApplicationShortName = "RDHM";

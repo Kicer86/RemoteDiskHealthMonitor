@@ -10,4 +10,9 @@ public:
     {
         m_deviceId = "mock_deviceId";
     }
+
+    DiskMock(const std::string& deviceId, const std::string& model)
+        : Disk(deviceId, model)
+    {
+    }
 };

@@ -2,34 +2,34 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "GeneralHealth.h"
-#include "SmartData.h"
 #include "ProbeStatus.h"
+#include "DiskSummary.h"
 
 class DiskInfo
 {
 public:
 	DiskInfo();
 
-	DiskInfo(QString _name, const GeneralHealth::Health& _health, const std::vector<ProbeStatus> &);
+	DiskInfo(std::string _name, const GeneralHealth::Health& _health, const std::vector<ProbeStatus> &);
 
 	void SetHealth(const GeneralHealth::Health& _health);
-	void SetName(const QString& _name);
+	void SetName(const std::string& _name);
     void SetProbesStatuses(const std::vector<ProbeStatus> &);
+	void SetSummary(const DiskSummary& summary);
 
-	const QString& GetName() const;
+	const std::string& GetName() const;
 	GeneralHealth::Health GetHealth() const;
     const std::vector<ProbeStatus>& GetProbesStatuses() const;
-
-	auto operator<=>(const DiskInfo& _other) const = default;
+	const DiskSummary& GetSummary() const;
+	bool operator==(const DiskInfo& _other) const = default;
 
 private:
-	QString m_name;
-	GeneralHealth::Health m_health;
+	std::string m_name;
+	GeneralHealth::Health m_health = GeneralHealth::UNKNOWN;
     std::vector<ProbeStatus> m_statuses;
+	DiskSummary m_summary;
 };
-
-
-Q_DECLARE_METATYPE(DiskInfo)
 
 

@@ -1,5 +1,7 @@
 
-#include <QProcess>
+#include <cstdio>
+#include <array>
+#include <sstream>
 
 #include "common/GeneralHealth.h"
 #include "LinGeneralAnalyzer.h"
@@ -22,7 +24,7 @@ GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-IProbe::RawData LinGeneralAnalyzer::GetRawData(const Disk& disk)
+nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
 {
     std::string result;
 
@@ -30,24 +32,33 @@ IProbe::RawData LinGeneralAnalyzer::GetRawData(const Disk& disk)
 
     if (it != m_errors.end())
     {
-        QStringList errors;
-        std::copy(it->second.begin(), it->second.end(), std::back_inserter(errors));
-
-        const QString errorline = errors.join('\n');
-        result = errorline.toStdString();
+        std::ostringstream oss;
+        bool first = true;
+        for (const auto& err : it->second)
+        {
+            if (!first) oss << '\n';
+            oss << err;
+            first = false;
+        }
+        result = oss.str();
     }
 
-    return result;
+    return nlohmann::json{{"type", "text"}, {"value", result}};
 }
 
 
 void LinGeneralAnalyzer::refreshState()
 {
-    QProcess dmesg;
+    std::string output;
+    std::array<char, 4096> buffer;
 
-    dmesg.start("dmesg", {}, QProcess::ReadOnly);
-    dmesg.waitForFinished(5000);
-    const QByteArray output = dmesg.readAll();
+    FILE* pipe = popen("dmesg", "r");
+    if (pipe)
+    {
+        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+            output += buffer.data();
+        pclose(pipe);
+    }
 
     m_errors = DmesgParser::parse(output, *m_partitionsManager);
 }

@@ -1,40 +1,39 @@
 
-#include <QRegularExpression>
+#include <regex>
 
-#include "common/OutputParsersUtils.h"
+#include "agent/OutputParsersUtils.h"
 #include "DmesgParser.h"
 #include "IPartitionsManager.h"
 
 
 namespace
 {
-    const QStringList ErrorPatterns = {
-        "Buffer I/O error on device ([a-z0-9]*)"
+    const std::vector<std::regex> ErrorPatterns = {
+        std::regex("Buffer I/O error on device ([a-z0-9]*)")
     };
 }
 
 
 
-std::map<Disk, std::set<QString>> DmesgParser::parse(const QByteArray& output, const IPartitionsManager& paritionsManager)
+std::map<Disk, std::set<std::string>> DmesgParser::parse(const std::string& output, const IPartitionsManager& paritionsManager)
 {
-    std::map<Disk, std::set<QString>> errors;
+    std::map<Disk, std::set<std::string>> errors;
 
     const auto lines = ParsersUtils::clean(output);
 
-    for(const QString& line: lines)
-        for(const QString& errorPattern: ErrorPatterns)
+    for(const auto& line: lines)
+        for(const auto& errorRegex: ErrorPatterns)
         {
-            QRegularExpression errorRegex(errorPattern);
+            std::smatch errorMatch;
 
-            if (line.contains(errorRegex))
+            if (std::regex_search(line, errorMatch, errorRegex))
             {
-                const QRegularExpressionMatch errorMatch = errorRegex.match(line);
-                const QString dev = errorMatch.captured(1);
-                const QString physicalDev = paritionsManager.isPartition(dev)?
+                const std::string dev = errorMatch[1].str();
+                const std::string physicalDev = paritionsManager.isPartition(dev)?
                                             paritionsManager.diskForPartition(dev):
                                             dev;
 
-                const Disk disk(physicalDev.toStdString());
+                const Disk disk(physicalDev);
 
                 errors[disk].insert(line);
             }

@@ -1,25 +1,23 @@
 #include "GeneralHealth.h"
 
-GeneralHealth::GeneralHealth()
-    : m_health(UNKNOWN)
-{
 
+std::string healthToString(GeneralHealth::Health health)
+{
+    switch (health)
+    {
+        case GeneralHealth::UNKNOWN:      return "UNKNOWN";
+        case GeneralHealth::GOOD:         return "GOOD";
+        case GeneralHealth::CHECK_STATUS: return "CHECK_STATUS";
+        case GeneralHealth::BAD:          return "BAD";
+    }
+    return "UNKNOWN";
 }
 
 
-GeneralHealth::GeneralHealth(const GeneralHealth::Health& _health)
-    : m_health(_health)
+GeneralHealth::Health healthFromString(const std::string& str)
 {
-}
-
-
-GeneralHealth::Health GeneralHealth::GetStatus() const
-{
-    return m_health;
-}
-
-
-void GeneralHealth::SetStatus(GeneralHealth::Health _health)
-{
-    m_health = _health;
+    if (str == "GOOD")         return GeneralHealth::GOOD;
+    if (str == "CHECK_STATUS") return GeneralHealth::CHECK_STATUS;
+    if (str == "BAD")          return GeneralHealth::BAD;
+    return GeneralHealth::UNKNOWN;
 }

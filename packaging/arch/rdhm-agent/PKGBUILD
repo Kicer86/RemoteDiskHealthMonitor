@@ -1,0 +1,33 @@
+# Maintainer: Wojciech Kucjas <wojciech.kucjas@gmail.com>
+# Maintainer: Michał Walenciak <michalwalenciak@gmail.com>
+pkgname=rdhm-agent
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='Remote Disc Health Monitor - Agent daemon'
+arch=('x86_64')
+license=('GPL-3.0-or-later')
+url='https://github.com/Kicer86/RemoteDiskHealthMonitor'
+depends=('smartmontools' 'util-linux')
+makedepends=('cmake' 'gcc')
+install=rdhm-agent.install
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cmake -B build -S "$pkgname-$pkgver" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_MONITOR=OFF \
+        -DBUILD_AGENT=ON
+    cmake --build build --target agent
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+
+    install -Dm644 "$srcdir/$pkgname-$pkgver/packaging/systemd/rdhm-agent.service" \
+        "$pkgdir/usr/lib/systemd/system/rdhm-agent.service"
+
+    install -Dm644 "$srcdir/$pkgname-$pkgver/packaging/conf/agent.conf" \
+        "$pkgdir/etc/rdhm/agent.conf"
+}

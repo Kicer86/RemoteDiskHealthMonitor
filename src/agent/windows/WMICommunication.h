@@ -23,6 +23,7 @@ public:
 
 	bool WMIInit(const WmiNamespace _namespace = Smart);
 	bool CollectSMARTDataViaWMI(const Disk& _disk);
+	bool CollectThresholdsViaWMI(const Disk& _disk);
 	bool CollectInfoAboutDiscsViaWMI();
 
 	const SmartData& GetSMARTData() const;
@@ -36,7 +37,9 @@ private:
 	std::vector<Disk> m_discsCollection;
 
 	void FeedSmartDataStructure(const std::vector<BYTE>& _data, const LONG& _dataSize);
+	void FeedThresholds(const std::vector<BYTE>& _data, const LONG& _dataSize);
 	std::string StringFromVariant(VARIANT& vt);
+	uint64_t Uint64FromVariant(VARIANT& vt);
 	
 	
 };

@@ -1,10 +1,12 @@
 
-#include <QProcess>
+#include <cstdio>
+#include <array>
 
 #include "../SystemUtilitiesFactory.h"
 #include "LinuxDiskCollector.h"
 #include "LinGeneralAnalyzer.h"
-#include "LinSmartAnalyzer.h"
+#include "../SmartHealthAnalyzer.h"
+#include "../SmartReader.h"
 #include "LsblkOutputParser.h"
 
 
@@ -34,12 +36,17 @@ struct SystemUtilitiesFactory::State
 {
     State()
     {
-        QProcess lsblk;
+        std::string output;
+        std::array<char, 4096> buffer;
 
-        lsblk.start("lsblk", { "-rMb" }, QProcess::ReadOnly);    // raw, merged arrays, size in bytes
-        lsblk.waitForFinished(5000);
+        FILE* pipe = popen("lsblk -rMb", "r");
+        if (pipe)
+        {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                output += buffer.data();
+            pclose(pipe);
+        }
 
-        const QByteArray output = lsblk.readAll();
         const auto diskData = LsblkOutputParser::parse(output);
 
         m_diskCollector = std::make_unique<LinuxDiskCollector>(diskData);
@@ -72,7 +79,7 @@ std::vector<std::unique_ptr<IProbe>> SystemUtilitiesFactory::getProbes()
 {
     std::vector<std::unique_ptr<IProbe>> probes;
     probes.emplace_back(std::make_unique<LinGeneralAnalyzer>(m_state->m_diskCollector));
-    probes.emplace_back(std::make_unique<LinSmartAnalyzer>());
+    probes.emplace_back(std::make_unique<SmartHealthAnalyzer>(std::make_unique<SmartReader>()));
 
     return probes;
 }

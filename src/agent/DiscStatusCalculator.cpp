@@ -1,6 +1,8 @@
 
 #include "DiscStatusCalculator.h"
 
+#include <algorithm>
+
 DiscStatusCalculator::DiscStatusCalculator()
 {
 

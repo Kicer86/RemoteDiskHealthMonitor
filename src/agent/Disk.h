@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 class Disk
@@ -7,8 +8,15 @@ class Disk
 public:
     Disk() = default;
     Disk(const std::string& _deviceId);
+    Disk(const std::string& _deviceId, const std::string& _model);
+    Disk(const std::string& _deviceId, const std::string& _model,
+         uint64_t capacity, const std::string& driveType);
 
     const std::string& GetDeviceId() const;
+    const std::string& GetModel() const;
+    const std::string& GetVendor() const;
+    uint64_t GetCapacity() const;
+    const std::string& GetDriveType() const;
 
     friend bool operator<(const Disk& lhs, const Disk& rhs)
     {
@@ -17,4 +25,10 @@ public:
 
 protected:
     std::string m_deviceId;
+    std::string m_model;
+    std::string m_vendor;
+    uint64_t m_capacity = 0;
+    std::string m_driveType;
+
+    static std::string detectVendor(const std::string& model);
 };

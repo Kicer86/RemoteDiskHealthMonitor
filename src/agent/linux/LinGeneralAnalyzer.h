@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <set>
-#include <QStringList>
+#include <string>
+#include <map>
 
 #include "../IProbe.h"
 
@@ -16,10 +17,10 @@ public:
     LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager>);
 
     GeneralHealth::Health GetStatus(const Disk& disk) override;
-    IProbe::RawData GetRawData(const Disk& disk) override;
+    nlohmann::json GetRawData(const Disk& disk) override;
 
 private:
-    std::map<Disk, std::set<QString>> m_errors;
+    std::map<Disk, std::set<std::string>> m_errors;
     std::shared_ptr<IPartitionsManager> m_partitionsManager;
 
     void refreshState();

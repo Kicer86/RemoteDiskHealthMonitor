@@ -14,7 +14,7 @@ AgentsExplorer::AgentsExplorer(QObject* parent)
 
 void AgentsExplorer::startListening()
 {
-    m_zeroConf.startBrowser(ZeroConfServiceName);
+    m_zeroConf.startBrowser(QString::fromStdString(ZeroConfServiceName));
 }
 
 
@@ -22,13 +22,8 @@ void AgentsExplorer::newAgent(const QZeroConfService& info)
 {
     qDebug() << "New agent discovered:" << info;
 
-    if (info->ip().isLoopback())
-        qDebug() << "Ignoring loopback";
-    else
-    {
-        AgentInformation agentInfo(info->name(), info->ip(), info->port(), AgentInformation::DetectionSource::ZeroConf);
-        emit agentDiscovered(agentInfo);
-    }
+    AgentInformation agentInfo(info->name(), info->ip(), info->port(), AgentInformation::DetectionSource::ZeroConf);
+    emit agentDiscovered(agentInfo);
 }
 
 

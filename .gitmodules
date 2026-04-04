@@ -1,6 +1,15 @@
-[submodule "googletest"]
-	path = googletest
+[submodule "external/cpp-httplib"]
+	path = external/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "external/nlohmann-json"]
+	path = external/nlohmann-json
+	url = https://github.com/nlohmann/json.git
+[submodule "external/mdns"]
+	path = external/mdns
+	url = https://github.com/mjansson/mdns.git
+[submodule "external/googletest"]
+	path = external/googletest
 	url = https://github.com/google/googletest.git
-[submodule "QtZeroConf"]
-	path = QtZeroConf
+[submodule "external/QtZeroConf"]
+	path = external/QtZeroConf
 	url = https://github.com/jbagg/QtZeroConf.git

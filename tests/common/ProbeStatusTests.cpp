@@ -1,53 +1,43 @@
 
-#include <QIODevice>
-
 #include <gmock/gmock.h>
 
-#include "ProbeStatus.h"
-#include "ProbeStatusSerialize.h"
+#include "common/ProbeStatus.h"
+#include "common/JsonSerialize.h"
 
 
 TEST(ProbeStatusTest, serializationOfStringRawData)
 {
     ProbeStatus status;
     status.health = GeneralHealth::GOOD;
-    status.rawData = std::string("test data");
+    status.rawData = nlohmann::json{{"type", "text"}, {"value", "test data"}};
 
-    QByteArray array;
-
-    QDataStream stream(&array, QIODevice::WriteOnly);
-    stream << status;
-
-    ProbeStatus status2;
-    QDataStream stream2(&array, QIODevice::ReadOnly);
-    stream2 >> status2;
+    nlohmann::json j = status;
+    ProbeStatus status2 = j.get<ProbeStatus>();
 
     EXPECT_EQ(status.health, status2.health);
-    EXPECT_EQ(std::get<std::string>(status.rawData), std::get<std::string>(status2.rawData));
+    EXPECT_EQ(status.rawData, status2.rawData);
 }
 
 
 
 TEST(ProbeStatusTest, serializationOfSmartRawData)
 {
+    SmartData smart{ .attributes = {
+        {0xF1, "Total_LBAs_Written", 1, 2, 0, 3},
+        {0xBD, "High_Fly_Writes", 8, 9, 0, 4}
+    }};
+
+    nlohmann::json smartJson;
+    to_json(smartJson, smart);
+    smartJson["type"] = "smart";
+
     ProbeStatus status;
     status.health = GeneralHealth::BAD;
-    status.rawData = SmartData{ .smartData =
-        {
-            {SmartData::TotalLBAsWritten, {1,2,3}},
-            {SmartData::HighFlyWrites, {8,9,4}}
-        }
-    };
+    status.rawData = smartJson;
 
-    QByteArray array;
-
-    QDataStream stream(&array, QIODevice::WriteOnly);
-    stream << status;
-
-    ProbeStatus status2;
-    QDataStream stream2(&array, QIODevice::ReadOnly);
-    stream2 >> status2;
+    nlohmann::json j = status;
+    ProbeStatus status2 = j.get<ProbeStatus>();
 
     EXPECT_EQ(status.health, status2.health);
-    EXPECT_EQ(std::get<SmartData>(status.rawData), std::get<SmartData>(status2.rawData));
+    EXPECT_EQ(status.rawData, status2.rawData);
 }

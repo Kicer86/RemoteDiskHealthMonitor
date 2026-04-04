@@ -5,13 +5,10 @@
 GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk)
 {
     CMDCommunication reader;
-
-    GeneralHealth res = reader.CollectDiskStatus( _disk );
-
-    return static_cast<GeneralHealth::Health>(res.GetStatus());
+    return reader.CollectDiskStatus(_disk);
 }
 
-IProbe::RawData WinGeneralAnalyzer::GetRawData(const Disk& _disk)
+nlohmann::json WinGeneralAnalyzer::GetRawData(const Disk& _disk)
 {
-    return std::string();
+    return nlohmann::json{{"type", "text"}, {"value", std::string()}};
 }

@@ -4,7 +4,6 @@
 
 #include "AgentsList.hpp"
 #include "IAgentsStatusProviderMock.hpp"
-#include "common/DiskInfoSerialize.h"
 
 
 using testing::_;
@@ -101,7 +100,8 @@ TEST(AgentsListTest, listofAvailableRoles)
     for(auto it = roles.begin(); it != roles.end(); ++it)
         listOfRoles.append(it.value());
 
-    EXPECT_THAT(listOfRoles, IsSupersetOf( {"agentName", "agentHealth", "agentDetectionType"} ));
+    EXPECT_THAT(listOfRoles, IsSupersetOf( {"agentName", "agentHealth", "agentDetectionType",
+                                           "agentHost", "agentPort", "agentConnectionState"} ));
 }
 
 
@@ -249,6 +249,88 @@ TEST(AgentsListTest, healthUpdatesAfterFetch)
 }
 
 
+TEST(AgentsListTest, exposesHostAndPort)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    const auto idx = aal.index(0, 0);
+    EXPECT_EQ(idx.data(AgentsList::AgentHostRole).toString(), "10.0.0.5");
+    EXPECT_EQ(idx.data(AgentsList::AgentPortRole).toInt(), 1630);
+}
+
+
+TEST(AgentsListTest, connectionStateUpdates)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    const auto idx = aal.index(0, 0);
+
+    // Default state should be Disconnected
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Disconnected));
+
+    // Update to Connected
+    emit statusProvider.connectionStateChanged(info, ConnectionState::Connected);
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Connected));
+
+    // Update to Error
+    emit statusProvider.connectionStateChanged(info, ConnectionState::Error);
+    EXPECT_EQ(idx.data(AgentsList::AgentConnectionStateRole).toInt(),
+              static_cast<int>(ConnectionState::Error));
+}
+
+
+TEST(AgentsListTest, unobserveCalledOnAgentRemoval)
+{
+    IAgentsStatusProviderMock statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("TestAgent", QHostAddress("192.168.1.1"), 1630, AgentInformation::DetectionSource::Hardcoded);
+
+    EXPECT_CALL(statusProvider, observe(info)).Times(1);
+    aal.addAgent(info);
+
+    EXPECT_CALL(statusProvider, unobserve(info)).Times(1);
+    aal.removeAgent(info);
+
+    ASSERT_EQ(aal.rowCount({}), 0);
+}
+
+
+TEST(AgentsListTest, diskInfoDataReturnsJsonStrings)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Agent", QHostAddress("10.0.0.5"), 1630, AgentInformation::DetectionSource::Hardcoded);
+    aal.addAgent(info);
+
+    // Create disk with a text probe
+    ProbeStatus textProbe;
+    textProbe.health = GeneralHealth::GOOD;
+    textProbe.rawData = nlohmann::json{{"type", "text"}, {"value", "dmesg output"}};
+
+    DiskInfo disk("sda", GeneralHealth::GOOD, {textProbe});
+    emit statusProvider.diskCollectionChanged(info, {disk});
+
+    const auto idx = aal.index(0, 0);
+    QStringList data = idx.data(AgentsList::AgentDiskInfoDataRole).toStringList();
+
+    ASSERT_EQ(data.size(), 1);
+    // Should be valid JSON, not CSV
+    EXPECT_TRUE(data[0].startsWith("{"));
+}
+
+
 TEST(AgentsListTest, agentDetectionTypeRoleFetching)
 {
     IAgentsStatusProviderMock statusProvider;
@@ -322,8 +404,8 @@ TEST(AgentsListTest, DiskInfoCollectionUpdateAfterFetch)
     v2.push_back(di2a);
     v2.push_back(di2b);
 
-    emit statusProvider.diskCollectionChanged(info1, diskInfoToByteArray(v1));
-    emit statusProvider.diskCollectionChanged(info2, diskInfoToByteArray(v2));
+    emit statusProvider.diskCollectionChanged(info1, v1);
+    emit statusProvider.diskCollectionChanged(info2, v2);
 
     const QModelIndex idx1 = aal.index(0, 0);
     const QModelIndex idx2 = aal.index(1, 0);

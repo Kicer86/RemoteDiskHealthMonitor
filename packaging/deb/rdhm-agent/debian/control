@@ -1,0 +1,22 @@
+Source: rdhm-agent
+Section: admin
+Priority: optional
+Maintainer: Michał Walenciak <michalwalenciak@gmail.com>
+Uploaders: Wojciech Kucjas <wojciech.kucjas@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.16),
+               g++ (>= 10),
+               pkg-config
+Standards-Version: 4.6.0
+Homepage: https://github.com/Kicer86/RemoteDiskHealthMonitor
+
+Package: rdhm-agent
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         smartmontools,
+         util-linux
+Description: Remote Disc Health Monitor - Agent
+ Lightweight daemon that collects local disk health metrics using
+ SMART data, dmesg, and lsblk, and publishes them over an HTTP REST API
+ with mDNS/DNS-SD service discovery. Designed to run as a systemd service.
