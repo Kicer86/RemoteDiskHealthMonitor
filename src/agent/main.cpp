@@ -219,11 +219,11 @@ int main(int argc, char** argv)
         publishFromCache(server, probeEntries, disks);
     });
 
-    // SSE client connected — refresh stale probes
+    // SSE client connected — refresh stale probes and always send current state
     server.setOnClientConnectedCallback([&server, &probeEntries, &disks] {
         std::lock_guard lock(g_probeMutex);
-        if (refreshStaleProbes(probeEntries, disks))
-            publishFromCache(server, probeEntries, disks);
+        refreshStaleProbes(probeEntries, disks);
+        publishFromCache(server, probeEntries, disks);
     });
 
     // Initial proactive data collection
