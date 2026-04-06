@@ -168,6 +168,8 @@ namespace
         server.setStatusData(overall, std::move(diskInfos));
     }
 
+    // Lock hierarchy (acquire in this order to avoid deadlocks):
+    //   refreshMutex (HttpServer::Impl) → g_probeMutex → dataMutex → sseMutex
     std::mutex g_probeMutex;
 }
 
