@@ -19,7 +19,7 @@
 
 namespace
 {
-    HttpServer* g_server = nullptr;
+    std::atomic<HttpServer*> g_server{nullptr};
     std::atomic<bool> g_running{true};
     std::mutex g_bgMutex;
     std::condition_variable g_bgCv;
@@ -27,8 +27,8 @@ namespace
     void signalHandler(int)
     {
         g_running = false;
-        if (g_server)
-            g_server->stop();
+        if (auto* srv = g_server.load(std::memory_order_relaxed))
+            srv->stop();
     }
 
     struct ProbeEntry
