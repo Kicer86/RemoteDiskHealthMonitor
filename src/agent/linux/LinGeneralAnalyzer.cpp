@@ -98,8 +98,10 @@ void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
 
     if (m_useJournalctl)
     {
-        // journalctl with cursor-file returns only new entries;
-        // accumulate into existing errors
+        // journalctl with cursor-file returns only new entries since last read.
+        // Errors are accumulated permanently — once a disk reports an error it stays BAD
+        // for the lifetime of the agent process. This is intentional: disk I/O errors
+        // warrant investigation even if they stop recurring.
         for (auto& [disk, errors] : newErrors)
             m_errors[disk].merge(std::move(errors));
     }
