@@ -1,12 +1,26 @@
 
 #include <cstdio>
+#include <cstdlib>
 #include <array>
 #include <sstream>
+#include <string>
 
 #include "common/GeneralHealth.h"
 #include "LinGeneralAnalyzer.h"
 #include "DmesgParser.h"
 #include "IPartitionsManager.h"
+
+namespace
+{
+    std::string getCursorFilePath()
+    {
+        if (const char* runDir = std::getenv("XDG_RUNTIME_DIR"))
+            return std::string(runDir) + "/rdhm-journal-cursor";
+
+        return "/run/rdhm/journal-cursor";
+    }
+}
+
 
 
 LinGeneralAnalyzer::LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager> manager)
@@ -64,8 +78,12 @@ void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
     std::string output;
     std::array<char, 4096> buffer;
 
+    const auto cursorPath = getCursorFilePath();
+    const auto journalCmd = "journalctl -k --cursor-file=" + cursorPath +
+                            " --no-pager -q --output=short";
+
     const char* cmd = m_useJournalctl
-        ? "journalctl -k --cursor-file=/tmp/rdhm-journal-cursor --no-pager -q --output=short"
+        ? journalCmd.c_str()
         : "dmesg";
 
     FILE* pipe = popen(cmd, "r");
