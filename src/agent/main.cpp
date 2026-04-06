@@ -219,11 +219,14 @@ int main(int argc, char** argv)
         publishFromCache(server, probeEntries, disks);
     });
 
-    // SSE client connected — refresh stale probes and always send current state
+    // SSE client connected — immediately send cached state, then wake
+    // background thread so stale probes get refreshed asynchronously
     server.setOnClientConnectedCallback([&server, &probeEntries, &disks] {
-        std::lock_guard lock(g_probeMutex);
-        refreshStaleProbes(probeEntries, disks);
-        publishFromCache(server, probeEntries, disks);
+        {
+            std::lock_guard lock(g_probeMutex);
+            publishFromCache(server, probeEntries, disks);
+        }
+        g_bgCv.notify_one();
     });
 
     // Initial proactive data collection
@@ -244,7 +247,7 @@ int main(int argc, char** argv)
 
     std::cout << "Agent '" << agentName << "' listening on 0.0.0.0:" << RDHMPort << "\n";
 
-    // Background thread for proactive probes
+    // Background thread for periodic and on-demand stale-probe refresh
     std::thread bgThread([&server, &probeEntries, &disks] {
         while (g_running)
         {
@@ -258,7 +261,7 @@ int main(int argc, char** argv)
                 break;
 
             std::lock_guard lock(g_probeMutex);
-            if (refreshStaleProbes(probeEntries, disks, true))
+            if (refreshStaleProbes(probeEntries, disks))
                 publishFromCache(server, probeEntries, disks);
         }
     });
