@@ -364,3 +364,11 @@ TEST_F(SmartHealthAnalyzerTest, NvmeHealthyReturnGood)
 
     EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
 }
+
+
+TEST_F(SmartHealthAnalyzerTest, RefreshPolicyReturnsExpectedValues)
+{
+    auto policy = m_analyzer->GetRefreshPolicy();
+    EXPECT_EQ(std::chrono::hours(4), policy.interval);
+    EXPECT_FALSE(policy.proactiveCollection);
+}
