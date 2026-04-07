@@ -13,6 +13,8 @@ struct RefreshPolicy
 {
     std::chrono::seconds interval{0};
     bool proactiveCollection = false;
+
+    bool operator==(const RefreshPolicy&) const = default;
 };
 
 
