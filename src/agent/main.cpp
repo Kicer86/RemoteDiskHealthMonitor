@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 #include <mutex>
+#include <ranges>
 #include <string>
 #include <thread>
 
@@ -106,10 +107,7 @@ namespace
             if (proactiveOnly && !policy.proactiveCollection)
                 continue;
 
-            const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-                now - entry.lastRefresh);
-
-            if (elapsed >= policy.interval)
+            if ((now - entry.lastRefresh) >= policy.interval)
             {
                 entry.probe->Refresh(disks);
                 entry.lastRefresh = now;
@@ -145,11 +143,9 @@ namespace
 
             for (const auto& entry : entries)
             {
-                ProbeStatus status;
-                status.health = entry.probe->GetStatus(disk);
-                status.rawData = entry.probe->GetRawData(disk);
-                probeStatuses.push_back(status);
-                healthStatuses.push_back(status.health);
+                probeStatuses.push_back({entry.probe->GetStatus(disk),
+                                         entry.probe->GetRawData(disk)});
+                healthStatuses.push_back(probeStatuses.back().health);
             }
 
             DiskInfo info;
@@ -161,8 +157,9 @@ namespace
         }
 
         std::vector<GeneralHealth::Health> statuses;
-        std::transform(diskInfos.begin(), diskInfos.end(), std::back_inserter(statuses),
-                       [](const auto& di) { return di.GetHealth(); });
+        statuses.reserve(diskInfos.size());
+        std::ranges::transform(diskInfos, std::back_inserter(statuses),
+                               &DiskInfo::GetHealth);
 
         auto overall = calc.CalculateCumulativeStatus(statuses);
         server.setStatusData(overall, std::move(diskInfos));
