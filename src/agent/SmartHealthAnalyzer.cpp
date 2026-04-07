@@ -118,18 +118,15 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk) const
         }
 
         // Layer 2b: NVMe critical fields — non-zero raw means trouble
-        if (isCriticalNvme(attr.name))
-        {
-            if (attr.rawVal > 0)
-                worst = std::max(worst, GeneralHealth::BAD);
-        }
+        if (isCriticalNvme(attr.name) && attr.rawVal > 0)
+            return GeneralHealth::BAD;
 
         // Layer 2c: NVMe wear indicator
         if (isNvmePercentageUsed(attr.name))
         {
             if (attr.rawVal >= 100)
-                worst = std::max(worst, GeneralHealth::BAD);
-            else if (attr.rawVal >= nvmeWearWarningPercent)
+                return GeneralHealth::BAD;
+            if (attr.rawVal >= nvmeWearWarningPercent)
                 worst = std::max(worst, GeneralHealth::CHECK_STATUS);
         }
 
