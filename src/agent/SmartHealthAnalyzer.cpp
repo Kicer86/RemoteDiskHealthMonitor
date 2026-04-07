@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 
 namespace
 {
@@ -27,7 +28,7 @@ namespace
 
     bool isCriticalAta(uint8_t id, const std::string& name)
     {
-        return std::any_of(criticalAttrs.begin(), criticalAttrs.end(),
+        return std::ranges::any_of(criticalAttrs,
             [&](const CriticalAttr& ca) { return ca.id == id && name == ca.canonicalName; });
     }
 
