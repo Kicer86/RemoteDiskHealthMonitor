@@ -16,7 +16,7 @@ void WinGeneralAnalyzer::Refresh(const std::vector<Disk>& disks)
 }
 
 
-GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk)
+GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk) const
 {
     auto it = m_cachedStatus.find(_disk.GetDeviceId());
     if (it != m_cachedStatus.end())
@@ -24,7 +24,7 @@ GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk)
     return GeneralHealth::UNKNOWN;
 }
 
-nlohmann::json WinGeneralAnalyzer::GetRawData(const Disk& _disk)
+nlohmann::json WinGeneralAnalyzer::GetRawData(const Disk& _disk) const
 {
     return nlohmann::json{{"type", "text"}, {"value", std::string()}};
 }

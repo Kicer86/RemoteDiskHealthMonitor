@@ -42,7 +42,7 @@ RefreshPolicy LinGeneralAnalyzer::GetRefreshPolicy() const
 }
 
 
-GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
+GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk) const
 {
     return m_errors.find(disk) == m_errors.end()?
         GeneralHealth::Health::GOOD :
@@ -50,7 +50,7 @@ GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
+nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk) const
 {
     std::string result;
 

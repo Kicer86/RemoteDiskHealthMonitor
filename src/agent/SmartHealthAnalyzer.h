@@ -20,8 +20,8 @@ public:
     RefreshPolicy GetRefreshPolicy() const override;
     void Refresh(const std::vector<Disk>& disks) override;
 
-    GeneralHealth::Health GetStatus(const Disk& disk) override;
-    nlohmann::json GetRawData(const Disk& disk) override;
+    GeneralHealth::Health GetStatus(const Disk& disk) const override;
+    nlohmann::json GetRawData(const Disk& disk) const override;
 
 private:
     std::unique_ptr<ISmartReader> m_reader;

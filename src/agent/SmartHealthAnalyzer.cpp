@@ -90,7 +90,7 @@ const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
 }
 
 
-GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
+GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk) const
 {
     auto it = m_cachedSmartData.find(disk.GetDeviceId());
     if (it == m_cachedSmartData.end())
@@ -146,7 +146,7 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
+nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk) const
 {
     auto it = m_cachedSmartData.find(disk.GetDeviceId());
     if (it == m_cachedSmartData.end())
