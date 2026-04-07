@@ -44,9 +44,9 @@ RefreshPolicy LinGeneralAnalyzer::GetRefreshPolicy() const
 
 GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk) const
 {
-    return m_errors.find(disk) == m_errors.end()?
-        GeneralHealth::Health::GOOD :
-        GeneralHealth::Health::BAD;
+    return m_errors.contains(disk)
+        ? GeneralHealth::Health::BAD
+        : GeneralHealth::Health::GOOD;
 }
 
 
