@@ -13,7 +13,7 @@
 class HttpServer
 {
 public:
-    HttpServer(const std::string& agentName, unsigned int port);
+    HttpServer(std::string agentName, unsigned int port);
     ~HttpServer();
 
     void setStatusData(GeneralHealth::Health overallHealth, std::vector<DiskInfo> disks);

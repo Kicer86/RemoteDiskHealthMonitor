@@ -94,10 +94,10 @@ struct HttpServer::Impl
 };
 
 
-HttpServer::HttpServer(const std::string& agentName, unsigned int port)
+HttpServer::HttpServer(std::string agentName, unsigned int port)
     : m_impl(std::make_unique<Impl>())
 {
-    m_impl->agentName = agentName;
+    m_impl->agentName = std::move(agentName);
     m_impl->port = port;
 
     // GET /api/v1/info
