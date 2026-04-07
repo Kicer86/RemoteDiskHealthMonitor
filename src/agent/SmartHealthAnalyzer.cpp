@@ -75,7 +75,7 @@ void SmartHealthAnalyzer::Refresh(const std::vector<Disk>& disks)
 }
 
 
-const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
+const IVendorProfile& SmartHealthAnalyzer::profileFor(std::string_view vendor)
 {
     static const GenericProfile generic;
     static const SamsungProfile samsung;

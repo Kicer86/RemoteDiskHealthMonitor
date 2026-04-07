@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "common/SmartData.h"
 
@@ -29,5 +30,5 @@ private:
     std::map<std::string, SmartData> m_cachedSmartData;
     std::map<std::string, SmartTestStatus> m_cachedTestStatus;
 
-    static const IVendorProfile& profileFor(const std::string& vendor);
+    static const IVendorProfile& profileFor(std::string_view vendor);
 };
