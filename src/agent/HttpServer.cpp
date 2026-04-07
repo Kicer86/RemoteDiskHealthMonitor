@@ -239,7 +239,11 @@ void HttpServer::setStatusData(GeneralHealth::Health overallHealth, std::vector<
         const auto now = std::chrono::system_clock::now();
         const auto time_t = std::chrono::system_clock::to_time_t(now);
         std::tm tm_buf{};
+#ifdef _WIN32
+        gmtime_s(&tm_buf, &time_t);
+#else
         gmtime_r(&time_t, &tm_buf);
+#endif
         std::ostringstream oss;
         oss << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%SZ");
         m_impl->lastRefreshed = oss.str();
