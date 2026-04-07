@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <list>
 #include <condition_variable>
+#include <ranges>
 #include <sstream>
 #include <thread>
 
@@ -21,7 +22,7 @@ namespace
     bool isValidDiskName(const std::string& name)
     {
         return !name.empty() && name.size() <= 64 &&
-               std::all_of(name.begin(), name.end(), [](char c) {
+               std::ranges::all_of(name, [](char c) {
                    return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
                });
     }
@@ -135,14 +136,12 @@ HttpServer::HttpServer(std::string agentName, unsigned int port)
 
         std::lock_guard lock(m_impl->dataMutex);
 
-        for (const auto& d : m_impl->disks)
+        auto it = std::ranges::find(m_impl->disks, name, &DiskInfo::GetName);
+        if (it != m_impl->disks.end())
         {
-            if (d.GetName() == name)
-            {
-                nlohmann::json j = d;
-                res.set_content(j.dump(), "application/json");
-                return;
-            }
+            nlohmann::json j = *it;
+            res.set_content(j.dump(), "application/json");
+            return;
         }
         res.status = 404;
         res.set_content(R"({"error":"disk not found"})", "application/json");
