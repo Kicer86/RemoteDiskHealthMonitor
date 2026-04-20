@@ -184,6 +184,8 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
     if (it == m_connections.end() || !it->connection)
         return;
 
+    it->subscribedAt = std::chrono::steady_clock::now();
+
     it->sseConnection = it->connection->subscribe("api/v1/events",
         [self = QPointer<AgentsStatusProvider>(this), info](const cpp_restapi::SseEvent& event) {
             if (!self)
@@ -257,7 +259,14 @@ void AgentsStatusProvider::checkConnections()
 
     for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
     {
-        if (it->connected && (now - it->lastEventTime) > WatchdogTimeout)
+        const bool eventTimedOut =
+            it->connected && (now - it->lastEventTime) > WatchdogTimeout;
+        const bool firstEventNeverArrived =
+            !it->connected && it->sseConnection
+            && it->subscribedAt != std::chrono::steady_clock::time_point{}
+            && (now - it->subscribedAt) > FirstEventGrace;
+
+        if (eventTimedOut || firstEventNeverArrived)
         {
             it->connected = false;
 

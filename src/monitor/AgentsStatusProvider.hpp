@@ -28,6 +28,7 @@ private:
         std::shared_ptr<cpp_restapi::IConnection> connection;
         std::shared_ptr<cpp_restapi::ISseConnection> sseConnection;
         std::chrono::steady_clock::time_point lastEventTime{};
+        std::chrono::steady_clock::time_point subscribedAt{};
         int reconnectDelayMs = 1000;
         bool connected = false;
     };
@@ -35,6 +36,7 @@ private:
     static constexpr int MaxReconnectDelayMs = 30000;
     static constexpr std::chrono::milliseconds WatchdogInterval{15000};
     static constexpr std::chrono::seconds WatchdogTimeout{45};
+    static constexpr std::chrono::seconds FirstEventGrace{30};
 
     QNetworkAccessManager m_nam;
     QHash<AgentInformation, AgentConnection> m_connections;
