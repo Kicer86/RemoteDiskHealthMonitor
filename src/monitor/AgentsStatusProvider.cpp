@@ -1,6 +1,7 @@
 
 #include <iostream>
 
+#include <QAbstractSocket>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -10,6 +11,18 @@
 #include "AgentsStatusProvider.hpp"
 #include "common/JsonSerialize.h"
 #include "common/constants.hpp"
+
+
+namespace
+{
+    QString formatHost(const QHostAddress& host)
+    {
+        const QString s = host.toString();
+        return host.protocol() == QAbstractSocket::IPv6Protocol
+            ? QStringLiteral("[%1]").arg(s)
+            : s;
+    }
+}
 
 
 AgentsStatusProvider::AgentsStatusProvider(QObject* parent)
@@ -28,7 +41,7 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
         return;
 
     const std::string address = QStringLiteral("http://%1:%2")
-        .arg(info.host().toString())
+        .arg(formatHost(info.host()))
         .arg(info.port())
         .toStdString();
 
@@ -61,7 +74,7 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
     emit connectionStateChanged(info, ConnectionState::Connecting);
 
     const QUrl url = QStringLiteral("http://%1:%2/api/v1/refresh")
-                         .arg(info.host().toString())
+                         .arg(formatHost(info.host()))
                          .arg(info.port());
 
     QNetworkRequest req(url);
