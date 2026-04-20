@@ -208,33 +208,7 @@ void AgentsStatusProvider::handleSseEvent(const AgentInformation& info, const cp
 
     emit connectionStateChanged(info, ConnectionState::Connected);
 
-    try
-    {
-        nlohmann::json j = nlohmann::json::parse(event.data);
-
-        if (j.contains("overallHealth"))
-        {
-            GeneralHealth::Health health = j.at("overallHealth").get<GeneralHealth::Health>();
-            emit statusChanged(info, health);
-        }
-
-        if (j.contains("disks"))
-        {
-            std::vector<DiskInfo> disks = j.at("disks").get<std::vector<DiskInfo>>();
-            emit diskCollectionChanged(info, disks);
-        }
-
-        if (j.contains("lastRefreshed"))
-        {
-            QString ts = QString::fromStdString(j.at("lastRefreshed").get<std::string>());
-            emit lastRefreshedChanged(info, ts);
-        }
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "JSON parse error for agent " << info.name().toStdString()
-                  << ": " << e.what() << "\n";
-    }
+    parseStatusJson(info, event.data);
 }
 
 
