@@ -201,7 +201,7 @@ void AgentsStatusProvider::handleSseEvent(const AgentInformation& info, const cp
     if (it == m_connections.end())
         return;
 
-    it->reconnectDelayMs = 1000;
+    it->reconnectDelay = std::chrono::milliseconds{1000};
     it->lastEventTime = std::chrono::steady_clock::now();
     it->connected = true;
 
@@ -243,8 +243,8 @@ void AgentsStatusProvider::scheduleSseReconnect(const AgentInformation& info)
     if (it == m_connections.end())
         return;
 
-    const int delay = it->reconnectDelayMs;
-    it->reconnectDelayMs = std::min(it->reconnectDelayMs * 2, MaxReconnectDelayMs);
+    const std::chrono::milliseconds delay = it->reconnectDelay;
+    it->reconnectDelay = std::min(it->reconnectDelay * 2, MaxReconnectDelay);
 
     QTimer::singleShot(delay, this, [self = QPointer<AgentsStatusProvider>(this), info]() {
         if (self && self->m_connections.contains(info))
