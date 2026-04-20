@@ -7,7 +7,7 @@
 #include <QPointer>
 #include <QUrl>
 
-#include <cpp_restapi/qt_connection.hpp>
+#include <cpp_restapi/create_qt_connection.hpp>
 
 #include "AgentsStatusProvider.hpp"
 #include "common/JsonSerialize.h"
@@ -47,8 +47,8 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
         .toStdString();
 
     AgentConnection agentConn;
-    agentConn.connection = std::make_shared<cpp_restapi::QtBackend::Connection>(
-        m_nam, address, std::map<std::string, std::string>{});
+    agentConn.connection = cpp_restapi::createQtConnection(
+        m_nam, address, {});
 
     m_connections.insert(info, std::move(agentConn));
 
