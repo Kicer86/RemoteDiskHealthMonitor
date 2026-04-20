@@ -16,7 +16,7 @@ AgentsStatusProvider::AgentsStatusProvider(QObject* parent)
     : IAgentsStatusProvider()
 {
     Q_UNUSED(parent);
-    m_watchdog.setInterval(WatchdogIntervalMs);
+    m_watchdog.setInterval(WatchdogInterval);
     connect(&m_watchdog, &QTimer::timeout, this, &AgentsStatusProvider::checkConnections);
     m_watchdog.start();
 }
@@ -229,7 +229,7 @@ void AgentsStatusProvider::checkConnections()
 
     for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
     {
-        if (it->connected && (now - it->lastEventTime) > WatchdogTimeoutS)
+        if (it->connected && (now - it->lastEventTime) > WatchdogTimeout)
         {
             it->connected = false;
 

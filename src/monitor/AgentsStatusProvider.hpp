@@ -33,8 +33,8 @@ private:
     };
 
     static constexpr int MaxReconnectDelayMs = 30000;
-    static constexpr int WatchdogIntervalMs = 15000;
-    static constexpr std::chrono::seconds WatchdogTimeoutS{45};
+    static constexpr std::chrono::milliseconds WatchdogInterval{15000};
+    static constexpr std::chrono::seconds WatchdogTimeout{45};
 
     QNetworkAccessManager m_nam;
     QHash<AgentInformation, AgentConnection> m_connections;
