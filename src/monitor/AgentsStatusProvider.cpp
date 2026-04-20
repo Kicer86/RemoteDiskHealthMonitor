@@ -232,24 +232,24 @@ void AgentsStatusProvider::checkConnections()
 {
     const auto now = std::chrono::steady_clock::now();
 
-    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    for (auto&& [info, conn] : m_connections.asKeyValueRange())
     {
         const bool eventTimedOut =
-            it->connected && (now - it->lastEventTime) > WatchdogTimeout;
+            conn.connected && (now - conn.lastEventTime) > WatchdogTimeout;
         const bool firstEventNeverArrived =
-            !it->connected && it->sseConnection
-            && it->subscribedAt != std::chrono::steady_clock::time_point{}
-            && (now - it->subscribedAt) > FirstEventGrace;
+            !conn.connected && conn.sseConnection
+            && conn.subscribedAt != std::chrono::steady_clock::time_point{}
+            && (now - conn.subscribedAt) > FirstEventGrace;
 
         if (eventTimedOut || firstEventNeverArrived)
         {
-            it->connected = false;
+            conn.connected = false;
 
-            if (it->sseConnection)
-                it->sseConnection->close();
+            if (conn.sseConnection)
+                conn.sseConnection->close();
 
-            emit connectionStateChanged(it.key(), ConnectionState::Disconnected);
-            scheduleSseReconnect(it.key());
+            emit connectionStateChanged(info, ConnectionState::Disconnected);
+            scheduleSseReconnect(info);
         }
     }
 }
