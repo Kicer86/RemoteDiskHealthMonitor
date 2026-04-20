@@ -4,6 +4,7 @@
 #include <QAbstractSocket>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QPointer>
 #include <QUrl>
 
 #include <cpp_restapi/qt_connection.hpp>
@@ -81,23 +82,27 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = m_nam.post(req, QByteArray());
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [this, info, reply]() {
+    QPointer<AgentsStatusProvider> self(this);
+    QObject::connect(reply, &QNetworkReply::finished, this, [self, info, reply]() {
         reply->deleteLater();
+
+        if (!self)
+            return;
 
         if (reply->error() == QNetworkReply::NoError)
         {
-            parseStatusJson(info, reply->readAll());
-            emit connectionStateChanged(info, ConnectionState::Connected);
+            self->parseStatusJson(info, reply->readAll());
+            emit self->connectionStateChanged(info, ConnectionState::Connected);
         }
         else
         {
             std::cerr << "Failed to fetch status from " << info.name().toStdString()
                       << ": " << reply->errorString().toStdString() << "\n";
-            emit connectionStateChanged(info, ConnectionState::Error);
+            emit self->connectionStateChanged(info, ConnectionState::Error);
         }
 
-        connectSse(info);
-        fetchAgentInfo(info);
+        self->connectSse(info);
+        self->fetchAgentInfo(info);
     });
 }
 
@@ -142,9 +147,12 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
 
     const std::string url = it->connection->url() + "/api/v1/info";
 
+    QPointer<AgentsStatusProvider> self(this);
     it->connection->fetch(url,
-        [this, info](cpp_restapi::Response response)
+        [self, info](cpp_restapi::Response response)
         {
+            if (!self)
+                return;
             try
             {
                 nlohmann::json j = nlohmann::json::parse(response.body);
@@ -153,7 +161,7 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
                     const int agentVersion = j.at("protocol").get<int>();
                     const int monitorVersion = static_cast<int>(VersionOfProtocol);
                     if (agentVersion != monitorVersion)
-                        emit protocolMismatch(info, agentVersion, monitorVersion);
+                        emit self->protocolMismatch(info, agentVersion, monitorVersion);
                 }
             }
             catch (const std::exception& e)
@@ -177,8 +185,10 @@ void AgentsStatusProvider::connectSse(const AgentInformation& info)
         return;
 
     it->sseConnection = it->connection->subscribe("api/v1/events",
-        [this, info](const cpp_restapi::SseEvent& event) {
-            handleSseEvent(info, event);
+        [self = QPointer<AgentsStatusProvider>(this), info](const cpp_restapi::SseEvent& event) {
+            if (!self)
+                return;
+            self->handleSseEvent(info, event);
         });
 }
 
@@ -234,9 +244,9 @@ void AgentsStatusProvider::scheduleSseReconnect(const AgentInformation& info)
     const int delay = it->reconnectDelayMs;
     it->reconnectDelayMs = std::min(it->reconnectDelayMs * 2, MaxReconnectDelayMs);
 
-    QTimer::singleShot(delay, this, [this, info]() {
-        if (m_connections.contains(info))
-            connectSse(info);
+    QTimer::singleShot(delay, this, [self = QPointer<AgentsStatusProvider>(this), info]() {
+        if (self && self->m_connections.contains(info))
+            self->connectSse(info);
     });
 }
 
