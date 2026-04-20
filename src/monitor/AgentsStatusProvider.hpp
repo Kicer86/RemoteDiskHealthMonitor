@@ -29,12 +29,12 @@ private:
         std::shared_ptr<cpp_restapi::ISseConnection> sseConnection;
         std::chrono::steady_clock::time_point lastEventTime{};
         std::chrono::steady_clock::time_point subscribedAt{};
-        std::chrono::milliseconds reconnectDelay{1000};
+        std::chrono::milliseconds reconnectDelay{std::chrono::seconds{1}};
         bool connected = false;
     };
 
-    static constexpr std::chrono::milliseconds MaxReconnectDelay{30000};
-    static constexpr std::chrono::milliseconds WatchdogInterval{15000};
+    static constexpr std::chrono::milliseconds MaxReconnectDelay{std::chrono::seconds{30}};
+    static constexpr std::chrono::milliseconds WatchdogInterval{std::chrono::seconds{15}};
     static constexpr std::chrono::seconds WatchdogTimeout{45};
     static constexpr std::chrono::seconds FirstEventGrace{30};
 
