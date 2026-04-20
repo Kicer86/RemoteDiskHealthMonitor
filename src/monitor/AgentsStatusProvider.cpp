@@ -170,10 +170,10 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
                           << ": " << e.what() << "\n";
             }
         },
-        [info](std::string error)
+        [info](cpp_restapi::HttpError error)
         {
             std::cerr << "Failed to fetch agent info from " << info.name().toStdString()
-                      << ": " << error << "\n";
+                      << ": " << error.message << "\n";
         });
 }
 
