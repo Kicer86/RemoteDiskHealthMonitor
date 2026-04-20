@@ -91,7 +91,8 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
 
         if (reply->error() == QNetworkReply::NoError)
         {
-            self->parseStatusJson(info, reply->readAll());
+            const QByteArray body = reply->readAll();
+            self->parseStatusJson(info, std::string_view{body.constData(), static_cast<size_t>(body.size())});
             emit self->connectionStateChanged(info, ConnectionState::Connected);
         }
         else
@@ -107,11 +108,11 @@ void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
 }
 
 
-void AgentsStatusProvider::parseStatusJson(const AgentInformation& info, const QByteArray& json)
+void AgentsStatusProvider::parseStatusJson(const AgentInformation& info, std::string_view json)
 {
     try
     {
-        nlohmann::json j = nlohmann::json::parse(json.toStdString());
+        nlohmann::json j = nlohmann::json::parse(json);
 
         if (j.contains("overallHealth"))
         {

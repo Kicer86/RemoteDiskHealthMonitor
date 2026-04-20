@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <memory>
+#include <string_view>
 
 #include <QNetworkAccessManager>
 #include <QHash>
@@ -46,7 +47,7 @@ private:
     void fetchAgentInfo(const AgentInformation& info);
     void connectSse(const AgentInformation& info);
     void handleSseEvent(const AgentInformation& info, const cpp_restapi::SseEvent& event);
-    void parseStatusJson(const AgentInformation& info, const QByteArray& json);
+    void parseStatusJson(const AgentInformation& info, std::string_view json);
     void scheduleSseReconnect(const AgentInformation& info);
     void checkConnections();
 };
