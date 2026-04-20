@@ -5,7 +5,7 @@ project(RemoteDiscHealthMonitor VERSION 0.2.0)
 
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 option(BUILD_AGENT   "Build the agent component"   ON)
 option(BUILD_MONITOR "Build the monitor component" ON)
