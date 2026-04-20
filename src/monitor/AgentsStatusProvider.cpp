@@ -161,6 +161,11 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
                 std::cerr << "Failed to parse agent info from " << info.name().toStdString()
                           << ": " << e.what() << "\n";
             }
+        },
+        [info](std::string error)
+        {
+            std::cerr << "Failed to fetch agent info from " << info.name().toStdString()
+                      << ": " << error << "\n";
         });
 }
 
