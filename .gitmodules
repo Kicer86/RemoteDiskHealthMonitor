@@ -16,3 +16,6 @@
 [submodule "external/cpp_restapi"]
 	path = external/cpp_restapi
 	url = https://github.com/Kicer86/cpp_restapi.git
+[submodule "external/jsoncpp"]
+	path = external/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
