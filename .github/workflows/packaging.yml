@@ -25,7 +25,7 @@ jobs:
       run: |
         apt-get install -y \
           build-essential cmake pkg-config debhelper devscripts \
-          fakeroot dpkg-dev libjsoncpp-dev
+          fakeroot dpkg-dev
 
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
@@ -75,7 +75,7 @@ jobs:
     - name: Install common build dependencies
       run: |
         dnf install -y \
-          cmake gcc-c++ make rpm-build systemd-rpm-macros jsoncpp-devel
+          cmake gcc-c++ make rpm-build systemd-rpm-macros
 
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
@@ -118,7 +118,7 @@ jobs:
     - name: Install base tools
       run: |
         pacman -Syu --noconfirm
-        pacman -S --noconfirm git base-devel cmake sudo jsoncpp
+        pacman -S --noconfirm git base-devel cmake sudo
 
     - uses: actions/checkout@v4
       with:

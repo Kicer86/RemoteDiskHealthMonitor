@@ -28,16 +28,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libavahi-client-dev libgl1-mesa-dev libjsoncpp-dev
-
-    - name: Install macOS dependencies
-      if: runner.os == 'macOS'
-      run: brew install jsoncpp
-
-    - name: Install Windows dependencies
-      if: runner.os == 'Windows'
-      run: vcpkg install jsoncpp:x64-windows
-      shell: bash
+        sudo apt-get install -y libavahi-client-dev libgl1-mesa-dev
 
     - name: Configure CMake
       run: cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
