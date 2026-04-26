@@ -27,26 +27,6 @@ add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 if(BUILD_MONITOR)
     add_subdirectory(external/QtZeroConf)
 
-    # jsoncpp is a transitive dependency of cpp_restapi. Build it from the bundled
-    # submodule instead of relying on a system-provided package.
-    set(JSONCPP_WITH_TESTS OFF CACHE BOOL "" FORCE)
-    set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE BOOL "" FORCE)
-    set(JSONCPP_WITH_EXAMPLE OFF CACHE BOOL "" FORCE)
-    set(JSONCPP_WITH_PKGCONFIG_SUPPORT OFF CACHE BOOL "" FORCE)
-    set(JSONCPP_WITH_CMAKE_PACKAGE OFF CACHE BOOL "" FORCE)
-    set(JSONCPP_WITH_INSTALL OFF CACHE BOOL "" FORCE)
-    set(BUILD_STATIC_LIBS OFF CACHE BOOL "" FORCE)
-    add_subdirectory(external/jsoncpp EXCLUDE_FROM_ALL)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/external/jsoncpp/jsoncpp-namespaced-targets.cmake)
-
-    # Short-circuit cpp_restapi's find_package(jsoncpp CONFIG) so it picks up
-    # the in-tree JsonCpp::JsonCpp target defined above instead of searching
-    # for a system install.
-    set(_jsoncpp_stub_dir "${CMAKE_BINARY_DIR}/jsoncpp-stub")
-    file(WRITE "${_jsoncpp_stub_dir}/jsoncppConfig.cmake"
-         "set(jsoncpp_FOUND TRUE)\n")
-    set(jsoncpp_DIR "${_jsoncpp_stub_dir}" CACHE PATH "" FORCE)
-
     set(CppRestAPI_QtBackend ON CACHE BOOL "" FORCE)
     add_subdirectory(external/cpp_restapi EXCLUDE_FROM_ALL)
 endif()
