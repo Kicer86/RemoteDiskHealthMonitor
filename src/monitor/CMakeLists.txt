@@ -49,6 +49,7 @@ qt_add_qml_module(monitor
 target_link_libraries(monitor
     PRIVATE
         common
+        cpp_restapi
 
         Qt::Network
         Qt::Quick
