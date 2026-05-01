@@ -118,7 +118,7 @@ namespace
         return anyRefreshed;
     }
 
-    void refreshAllProbes(std::vector<ProbeEntry>& entries,
+    void refreshAllProbes(std::span<ProbeEntry> entries,
                           const std::vector<Disk>& disks)
     {
         const auto now = std::chrono::steady_clock::now();
@@ -130,7 +130,7 @@ namespace
     }
 
     void publishFromCache(HttpServer& server,
-                          const std::vector<ProbeEntry>& entries,
+                          const std::span<ProbeEntry> entries,
                           const std::vector<Disk>& disks)
     {
         DiscStatusCalculator calc;
@@ -204,9 +204,7 @@ int main(int argc, char** argv)
 
     // Create persistent probes
     auto probeUptrs = systemUtilsFactory.getProbes();
-    std::vector<ProbeEntry> probeEntries;
-    for (auto& p : probeUptrs)
-        probeEntries.push_back({std::move(p), {}});
+    auto probeEntries = std::ranges::to<std::vector<ProbeEntry>>(std::views::transform(probeUptrs, [](auto&& probe) { return ProbeEntry(std::move(probe)); }));
 
     // Create HTTP server
     HttpServer server(agentName, RDHMPort);
