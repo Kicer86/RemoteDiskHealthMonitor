@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <vector>
 #include <mutex>
 #include <memory>
@@ -13,7 +13,7 @@
 class HttpServer
 {
 public:
-    HttpServer(std::string agentName, unsigned int port);
+    HttpServer(std::string_view agentName, unsigned int port);
     ~HttpServer();
 
     void setStatusData(GeneralHealth::Health overallHealth, std::vector<DiskInfo> disks);
