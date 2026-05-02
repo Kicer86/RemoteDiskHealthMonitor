@@ -272,7 +272,10 @@ int main(int argc, char** argv)
 
             std::lock_guard lock(g_probeMutex);
             if (refreshStaleProbes(probeEntries, disks))
+            {
+                std::cout << "Publishing new statues\n";
                 publishFromCache(server, probeEntries, disks);
+            }
         }
     });
 
