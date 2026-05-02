@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <list>
 #include <condition_variable>
+#include <ranges>
 #include <sstream>
 #include <thread>
 
@@ -21,7 +22,7 @@ namespace
     bool isValidDiskName(const std::string& name)
     {
         return !name.empty() && name.size() <= 64 &&
-               std::all_of(name.begin(), name.end(), [](char c) {
+               std::ranges::all_of(name, [](char c) {
                    return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
                });
     }
@@ -40,6 +41,7 @@ struct HttpServer::Impl
     std::string lastRefreshed;
 
     std::function<void()> refreshCallback;
+    std::function<void()> onClientConnectedCallback;
 
     // Refresh cooldown
     static constexpr int RefreshCooldownSeconds = 600;  // 10 minutes
@@ -93,7 +95,7 @@ struct HttpServer::Impl
 };
 
 
-HttpServer::HttpServer(const std::string& agentName, unsigned int port)
+HttpServer::HttpServer(std::string_view agentName, unsigned int port)
     : m_impl(std::make_unique<Impl>())
 {
     m_impl->agentName = agentName;
@@ -134,14 +136,12 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
 
         std::lock_guard lock(m_impl->dataMutex);
 
-        for (const auto& d : m_impl->disks)
+        auto it = std::ranges::find(m_impl->disks, name, &DiskInfo::GetName);
+        if (it != m_impl->disks.end())
         {
-            if (d.GetName() == name)
-            {
-                nlohmann::json j = d;
-                res.set_content(j.dump(), "application/json");
-                return;
-            }
+            nlohmann::json j = *it;
+            res.set_content(j.dump(), "application/json");
+            return;
         }
         res.status = 404;
         res.set_content(R"({"error":"disk not found"})", "application/json");
@@ -190,6 +190,10 @@ HttpServer::HttpServer(const std::string& agentName, unsigned int port)
             m_impl->sseClients.push_back(client);
         }
 
+        // Notify that a new monitor connected — may trigger conditional refresh
+        if (m_impl->onClientConnectedCallback)
+            m_impl->onClientConnectedCallback();
+
         res.set_header("Cache-Control", "no-cache");
         res.set_header("Connection", "keep-alive");
 
@@ -234,8 +238,14 @@ void HttpServer::setStatusData(GeneralHealth::Health overallHealth, std::vector<
 
         const auto now = std::chrono::system_clock::now();
         const auto time_t = std::chrono::system_clock::to_time_t(now);
+        std::tm tm_buf{};
+#ifdef _WIN32
+        gmtime_s(&tm_buf, &time_t);
+#else
+        gmtime_r(&time_t, &tm_buf);
+#endif
         std::ostringstream oss;
-        oss << std::put_time(std::gmtime(&time_t), "%Y-%m-%dT%H:%M:%SZ");
+        oss << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%SZ");
         m_impl->lastRefreshed = oss.str();
     }
 
@@ -268,4 +278,10 @@ void HttpServer::stop()
 void HttpServer::setRefreshCallback(std::function<void()> cb)
 {
     m_impl->refreshCallback = std::move(cb);
+}
+
+
+void HttpServer::setOnClientConnectedCallback(std::function<void()> cb)
+{
+    m_impl->onClientConnectedCallback = std::move(cb);
 }

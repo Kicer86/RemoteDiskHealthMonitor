@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 
 namespace
 {
@@ -27,7 +28,7 @@ namespace
 
     bool isCriticalAta(uint8_t id, const std::string& name)
     {
-        return std::any_of(criticalAttrs.begin(), criticalAttrs.end(),
+        return std::ranges::any_of(criticalAttrs,
             [&](const CriticalAttr& ca) { return ca.id == id && name == ca.canonicalName; });
     }
 
@@ -59,7 +60,23 @@ SmartHealthAnalyzer::SmartHealthAnalyzer(std::unique_ptr<ISmartReader> reader)
 SmartHealthAnalyzer::~SmartHealthAnalyzer() = default;
 
 
-const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
+RefreshPolicy SmartHealthAnalyzer::GetRefreshPolicy() const
+{
+    return {std::chrono::hours(4), false};
+}
+
+
+void SmartHealthAnalyzer::Refresh(const std::vector<Disk>& disks)
+{
+    for (const auto& disk : disks)
+    {
+        m_cachedSmartData[disk.GetDeviceId()] = m_reader->ReadSMARTData(disk);
+        m_cachedTestStatus[disk.GetDeviceId()] = m_reader->ReadTestStatus(disk);
+    }
+}
+
+
+const IVendorProfile& SmartHealthAnalyzer::profileFor(std::string_view vendor)
 {
     static const GenericProfile generic;
     static const SamsungProfile samsung;
@@ -74,9 +91,13 @@ const IVendorProfile& SmartHealthAnalyzer::profileFor(const std::string& vendor)
 }
 
 
-GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
+GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk) const
 {
-    const auto smart = m_reader->ReadSMARTData(disk);
+    auto it = m_cachedSmartData.find(disk.GetDeviceId());
+    if (it == m_cachedSmartData.end())
+        return GeneralHealth::UNKNOWN;
+
+    const auto& smart = it->second;
     const auto& profile = profileFor(disk.GetVendor());
 
     auto worst = GeneralHealth::GOOD;
@@ -98,18 +119,15 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
         }
 
         // Layer 2b: NVMe critical fields — non-zero raw means trouble
-        if (isCriticalNvme(attr.name))
-        {
-            if (attr.rawVal > 0)
-                worst = std::max(worst, GeneralHealth::BAD);
-        }
+        if (isCriticalNvme(attr.name) && attr.rawVal > 0)
+            return GeneralHealth::BAD;
 
         // Layer 2c: NVMe wear indicator
         if (isNvmePercentageUsed(attr.name))
         {
             if (attr.rawVal >= 100)
-                worst = std::max(worst, GeneralHealth::BAD);
-            else if (attr.rawVal >= nvmeWearWarningPercent)
+                return GeneralHealth::BAD;
+            if (attr.rawVal >= nvmeWearWarningPercent)
                 worst = std::max(worst, GeneralHealth::CHECK_STATUS);
         }
 
@@ -126,9 +144,13 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk)
 }
 
 
-nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
+nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk) const
 {
-    const auto smart = m_reader->ReadSMARTData(disk);
+    auto it = m_cachedSmartData.find(disk.GetDeviceId());
+    if (it == m_cachedSmartData.end())
+        return nlohmann::json{{"type", "smart"}, {"attributes", nlohmann::json::array()}};
+
+    const auto& smart = it->second;
 
     nlohmann::json attrs = nlohmann::json::array();
     for (const auto& attr : smart.attributes)
@@ -145,7 +167,11 @@ nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk)
 
     auto j = nlohmann::json{{"type", "smart"}, {"attributes", attrs}};
 
-    const auto testStatus = m_reader->ReadTestStatus(disk);
+    auto testIt = m_cachedTestStatus.find(disk.GetDeviceId());
+    SmartTestStatus testStatus;
+    if (testIt != m_cachedTestStatus.end())
+        testStatus = testIt->second;
+
     j["selfTestStatus"] = {
         {"running", testStatus.running},
         {"percentRemaining", testStatus.percentRemaining},

@@ -1,30 +1,56 @@
 
 #include <cstdio>
+#include <cstdlib>
 #include <array>
 #include <sstream>
+#include <string>
 
 #include "common/GeneralHealth.h"
 #include "LinGeneralAnalyzer.h"
 #include "DmesgParser.h"
 #include "IPartitionsManager.h"
 
+namespace
+{
+    std::string getCursorFilePath()
+    {
+        if (const char* runDir = std::getenv("XDG_RUNTIME_DIR"))
+            return std::string(runDir) + "/rdhm-journal-cursor";
+
+        return "/run/rdhm/journal-cursor";
+    }
+}
+
+
 
 LinGeneralAnalyzer::LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager> manager)
     : m_partitionsManager(manager)
 {
-    refreshState();
+    FILE* pipe = popen("which journalctl", "r");
+    if (pipe)
+    {
+        char buf[256];
+        m_useJournalctl = (fgets(buf, sizeof(buf), pipe) != nullptr);
+        pclose(pipe);
+    }
 }
 
 
-GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk)
+RefreshPolicy LinGeneralAnalyzer::GetRefreshPolicy() const
 {
-    return m_errors.find(disk) == m_errors.end()?
-        GeneralHealth::Health::GOOD :
-        GeneralHealth::Health::BAD;
+    return {std::chrono::hours(1), true};
 }
 
 
-nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
+GeneralHealth::Health LinGeneralAnalyzer::GetStatus(const Disk& disk) const
+{
+    return m_errors.contains(disk)
+        ? GeneralHealth::Health::BAD
+        : GeneralHealth::Health::GOOD;
+}
+
+
+nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk) const
 {
     std::string result;
 
@@ -47,12 +73,20 @@ nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk)
 }
 
 
-void LinGeneralAnalyzer::refreshState()
+void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
 {
     std::string output;
     std::array<char, 4096> buffer;
 
-    FILE* pipe = popen("dmesg", "r");
+    const auto cursorPath = getCursorFilePath();
+    const auto journalCmd = "journalctl -k --cursor-file=" + cursorPath +
+                            " --no-pager -q --output=short";
+
+    const char* cmd = m_useJournalctl
+        ? journalCmd.c_str()
+        : "dmesg";
+
+    FILE* pipe = popen(cmd, "r");
     if (pipe)
     {
         while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
@@ -60,5 +94,20 @@ void LinGeneralAnalyzer::refreshState()
         pclose(pipe);
     }
 
-    m_errors = DmesgParser::parse(output, *m_partitionsManager);
+    auto newErrors = DmesgParser::parse(output, *m_partitionsManager);
+
+    if (m_useJournalctl)
+    {
+        // journalctl with cursor-file returns only new entries since last read.
+        // Errors are accumulated permanently — once a disk reports an error it stays BAD
+        // for the lifetime of the agent process. This is intentional: disk I/O errors
+        // warrant investigation even if they stop recurring.
+        for (auto& [disk, errors] : newErrors)
+            m_errors[disk].merge(std::move(errors));
+    }
+    else
+    {
+        // dmesg reads the full ring buffer; replace entirely
+        m_errors = std::move(newErrors);
+    }
 }

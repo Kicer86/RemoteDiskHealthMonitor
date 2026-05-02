@@ -1,11 +1,18 @@
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstring>
 #include <iostream>
+#include <mutex>
+#include <ranges>
 #include <string>
+#include <thread>
 
 #include "common/constants.hpp"
 #include "common/DiskSummary.h"
+#include "common/Utils.h"
 #include "HttpServer.h"
 #include "MdnsPublisher.h"
 #include "SystemUtilitiesFactory.h"
@@ -14,13 +21,23 @@
 
 namespace
 {
-    HttpServer* g_server = nullptr;
+    std::atomic<HttpServer*> g_server{nullptr};
+    std::atomic<bool> g_running{true};
+    std::mutex g_bgMutex;
+    std::condition_variable g_bgCv;
 
     void signalHandler(int)
     {
-        if (g_server)
-            g_server->stop();
+        g_running = false;
+        if (auto* srv = g_server.load(std::memory_order_relaxed))
+            srv->stop();
     }
+
+    struct ProbeEntry
+    {
+        std::unique_ptr<IProbe> probe;
+        std::chrono::steady_clock::time_point lastRefresh{};
+    };
 
     DiskSummary buildSummary(const Disk& disk, const std::vector<ProbeStatus>& probeStatuses)
     {
@@ -75,45 +92,83 @@ namespace
 
         return summary;
     }
-}
 
-
-void collectAndPublish(HttpServer& server, SystemUtilitiesFactory& factory)
-{
-    auto diskCollector = factory.diskCollector();
-    auto diskCollection = diskCollector->GetDisksList();
-    const auto probes = factory.getProbes();
-
-    DiscStatusCalculator calc;
-    std::vector<DiskInfo> diskInfos;
-
-    for (const auto& disk : diskCollection)
+    // Returns true if any probe was refreshed
+    bool refreshStaleProbes(std::vector<ProbeEntry>& entries,
+                            const std::vector<Disk>& disks,
+                            bool proactiveOnly = false)
     {
-        std::vector<ProbeStatus> probeStatuses;
-        probeStatuses.reserve(probes.size());
+        bool anyRefreshed = false;
+        const auto now = std::chrono::steady_clock::now();
 
-        for (const auto& probe : probes)
+        for (auto& entry : entries)
         {
-            ProbeStatus status;
-            status.health = probe->GetStatus(disk);
-            status.rawData = probe->GetRawData(disk);
-            probeStatuses.push_back(status);
+            const auto policy = entry.probe->GetRefreshPolicy();
+
+            if (proactiveOnly && !policy.proactiveCollection)
+                continue;
+
+            if ((now - entry.lastRefresh) >= policy.interval)
+            {
+                entry.probe->Refresh(disks);
+                entry.lastRefresh = now;
+                anyRefreshed = true;
+            }
         }
 
-        DiskInfo info;
-        info.SetName(disk.GetDeviceId());
-        info.SetHealth(calc.CalculateDiskStatus(disk, probes));
-        info.SetProbesStatuses(probeStatuses);
-        info.SetSummary(buildSummary(disk, probeStatuses));
-        diskInfos.push_back(info);
+        return anyRefreshed;
     }
 
-    std::vector<GeneralHealth::Health> statuses;
-    std::transform(diskInfos.begin(), diskInfos.end(), std::back_inserter(statuses),
-                   [](const auto& di) { return di.GetHealth(); });
+    void refreshAllProbes(std::span<ProbeEntry> entries,
+                          const std::vector<Disk>& disks)
+    {
+        const auto now = std::chrono::steady_clock::now();
+        for (auto& entry : entries)
+        {
+            entry.probe->Refresh(disks);
+            entry.lastRefresh = now;
+        }
+    }
 
-    auto overall = calc.CalculateCumulativeStatus(statuses);
-    server.setStatusData(overall, std::move(diskInfos));
+    void publishFromCache(HttpServer& server,
+                          const std::span<ProbeEntry> entries,
+                          const std::vector<Disk>& disks)
+    {
+        DiscStatusCalculator calc;
+        std::vector<DiskInfo> diskInfos;
+
+        for (const auto& disk : disks)
+        {
+            std::vector<ProbeStatus> probeStatuses;
+            std::vector<GeneralHealth::Health> healthStatuses;
+
+            for (const auto& entry : entries)
+            {
+                probeStatuses.push_back({entry.probe->GetStatus(disk),
+                                         entry.probe->GetRawData(disk)});
+                healthStatuses.push_back(probeStatuses.back().health);
+            }
+
+            DiskInfo info;
+            info.SetName(disk.GetDeviceId());
+            info.SetHealth(calc.CalculateCumulativeStatus(healthStatuses));
+            info.SetProbesStatuses(probeStatuses);
+            info.SetSummary(buildSummary(disk, probeStatuses));
+            diskInfos.push_back(info);
+        }
+
+        std::vector<GeneralHealth::Health> statuses;
+        statuses.reserve(diskInfos.size());
+        std::ranges::transform(diskInfos, std::back_inserter(statuses),
+                               &DiskInfo::GetHealth);
+
+        auto overall = calc.CalculateCumulativeStatus(statuses);
+        server.setStatusData(overall, std::move(diskInfos));
+    }
+
+    // Lock hierarchy (acquire in this order to avoid deadlocks):
+    //   refreshMutex (HttpServer::Impl) → g_probeMutex → dataMutex → sseMutex
+    std::mutex g_probeMutex;
 }
 
 
@@ -144,19 +199,53 @@ int main(int argc, char** argv)
     auto diskCollector = systemUtilsFactory.diskCollector();
     const auto disks = diskCollector->GetDisksList();
 
-    std::cout << "Found disks:\n";
+    std::vector<std::vector<std::string>> disksInfo{
+        {"ID", "type", "capacity", "vendor", "model"}
+    };
+
     for (const auto& disk : disks)
-        std::cout << "  " << disk.GetDeviceId() << '\n';
+        disksInfo.emplace_back(
+        std::vector {
+            disk.GetDeviceId(),
+            disk.GetDriveType(),
+            formatBytes(disk.GetCapacity()),
+            disk.GetVendor(),
+            disk.GetModel()
+        });
+
+    std::cout << "Found disks:\n" << formatTable(disksInfo);
+
+    // Create persistent probes
+    auto probeUptrs = systemUtilsFactory.getProbes();
+    std::vector<ProbeEntry> probeEntries;
+    std::ranges::transform(probeUptrs, std::back_inserter(probeEntries), [](auto&& probe) { return ProbeEntry(std::move(probe)); });
 
     // Create HTTP server
     HttpServer server(agentName, RDHMPort);
 
-    server.setRefreshCallback([&server, &systemUtilsFactory] {
-        collectAndPublish(server, systemUtilsFactory);
+    // POST /api/v1/refresh — force refresh all probes (manual trigger)
+    server.setRefreshCallback([&server, &probeEntries, &disks] {
+        std::lock_guard lock(g_probeMutex);
+        refreshAllProbes(probeEntries, disks);
+        publishFromCache(server, probeEntries, disks);
     });
 
-    // Initial data collection
-    collectAndPublish(server, systemUtilsFactory);
+    // SSE client connected — immediately send cached state, then wake
+    // background thread so stale probes get refreshed asynchronously
+    server.setOnClientConnectedCallback([&server, &probeEntries, &disks] {
+        {
+            std::lock_guard lock(g_probeMutex);
+            publishFromCache(server, probeEntries, disks);
+        }
+        g_bgCv.notify_one();
+    });
+
+    // Initial proactive data collection
+    {
+        std::lock_guard lock(g_probeMutex);
+        refreshStaleProbes(probeEntries, disks, true);
+        publishFromCache(server, probeEntries, disks);
+    }
 
     // Start mDNS publisher
     MdnsPublisher mdns(agentName, ZeroConfServiceName, RDHMPort);
@@ -169,10 +258,36 @@ int main(int argc, char** argv)
 
     std::cout << "Agent '" << agentName << "' listening on 0.0.0.0:" << RDHMPort << "\n";
 
+    // Background thread for periodic and on-demand stale-probe refresh
+    std::thread bgThread([&server, &probeEntries, &disks] {
+        while (g_running)
+        {
+            {
+                std::unique_lock lock(g_bgMutex);
+                g_bgCv.wait_for(lock, std::chrono::minutes(1),
+                                [] { return !g_running.load(); });
+            }
+
+            if (!g_running)
+                break;
+
+            std::lock_guard lock(g_probeMutex);
+            if (refreshStaleProbes(probeEntries, disks))
+            {
+                std::cout << "Publishing new statues\n";
+                publishFromCache(server, probeEntries, disks);
+            }
+        }
+    });
+
     // Blocking — runs the HTTP server
     server.listen();
 
     // Cleanup
+    g_running = false;
+    g_bgCv.notify_all();
+    bgThread.join();
+
     mdns.stop();
     g_server = nullptr;
 

@@ -52,8 +52,12 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
 
     m_connections.insert(info, std::move(agentConn));
 
-    // Fetch initial status, then trigger refresh, then connect SSE
-    fetchInitialStatus(info);
+    emit connectionStateChanged(info, ConnectionState::Connecting);
+
+    // SSE connect triggers agent-side conditional refresh;
+    // the first SSE event carries initial status data
+    connectSse(info);
+    fetchAgentInfo(info);
 }
 
 
@@ -67,44 +71,6 @@ void AgentsStatusProvider::unobserve(const AgentInformation& info)
         it->sseConnection->close();
 
     m_connections.erase(it);
-}
-
-
-void AgentsStatusProvider::fetchInitialStatus(const AgentInformation& info)
-{
-    emit connectionStateChanged(info, ConnectionState::Connecting);
-
-    const QUrl url = QStringLiteral("http://%1:%2/api/v1/refresh")
-                         .arg(formatHost(info.host()))
-                         .arg(info.port());
-
-    QNetworkRequest req(url);
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply* reply = m_nam.post(req, QByteArray());
-
-    QPointer<AgentsStatusProvider> self(this);
-    QObject::connect(reply, &QNetworkReply::finished, this, [self, info, reply]() {
-        reply->deleteLater();
-
-        if (!self)
-            return;
-
-        if (reply->error() == QNetworkReply::NoError)
-        {
-            const QByteArray body = reply->readAll();
-            self->parseStatusJson(info, std::string_view{body.constData(), static_cast<size_t>(body.size())});
-            emit self->connectionStateChanged(info, ConnectionState::Connected);
-        }
-        else
-        {
-            std::cerr << "Failed to fetch status from " << info.name().toStdString()
-                      << ": " << reply->errorString().toStdString() << "\n";
-            emit self->connectionStateChanged(info, ConnectionState::Error);
-        }
-
-        self->connectSse(info);
-        self->fetchAgentInfo(info);
-    });
 }
 
 

@@ -2,13 +2,29 @@
 #include "CMDCommunication.h"
 
 
-GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk)
+RefreshPolicy WinGeneralAnalyzer::GetRefreshPolicy() const
 {
-    CMDCommunication reader;
-    return reader.CollectDiskStatus(_disk);
+    return {std::chrono::hours(1), true};
 }
 
-nlohmann::json WinGeneralAnalyzer::GetRawData(const Disk& _disk)
+
+void WinGeneralAnalyzer::Refresh(const std::vector<Disk>& disks)
+{
+    CMDCommunication reader;
+    for (const auto& disk : disks)
+        m_cachedStatus[disk.GetDeviceId()] = reader.CollectDiskStatus(disk);
+}
+
+
+GeneralHealth::Health WinGeneralAnalyzer::GetStatus(const Disk& _disk) const
+{
+    auto it = m_cachedStatus.find(_disk.GetDeviceId());
+    if (it != m_cachedStatus.end())
+        return it->second;
+    return GeneralHealth::UNKNOWN;
+}
+
+nlohmann::json WinGeneralAnalyzer::GetRawData(const Disk& _disk) const
 {
     return nlohmann::json{{"type", "text"}, {"value", std::string()}};
 }

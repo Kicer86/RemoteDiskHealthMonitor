@@ -15,6 +15,7 @@ Item {
     property var diskData: []
     property string lastRefreshed: ""
 
+    // TODO: try using funcion from 'common' module
     function formatBytes(bytes) {
         if (bytes <= 0) return ""
         var units = ["B", "KB", "MB", "GB", "TB", "PB"]

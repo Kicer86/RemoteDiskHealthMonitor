@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <vector>
 #include <mutex>
 #include <memory>
@@ -13,7 +13,7 @@
 class HttpServer
 {
 public:
-    HttpServer(const std::string& agentName, unsigned int port);
+    HttpServer(std::string_view agentName, unsigned int port);
     ~HttpServer();
 
     void setStatusData(GeneralHealth::Health overallHealth, std::vector<DiskInfo> disks);
@@ -24,6 +24,9 @@ public:
 
     // Called to trigger data refresh; the callback does collection and calls setStatusData
     void setRefreshCallback(std::function<void()> cb);
+
+    // Called when a new SSE client connects
+    void setOnClientConnectedCallback(std::function<void()> cb);
 
 private:
     struct Impl;
