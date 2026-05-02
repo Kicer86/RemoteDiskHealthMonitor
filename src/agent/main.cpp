@@ -12,6 +12,7 @@
 
 #include "common/constants.hpp"
 #include "common/DiskSummary.h"
+#include "common/Utils.h"
 #include "HttpServer.h"
 #include "MdnsPublisher.h"
 #include "SystemUtilitiesFactory.h"
@@ -198,9 +199,21 @@ int main(int argc, char** argv)
     auto diskCollector = systemUtilsFactory.diskCollector();
     const auto disks = diskCollector->GetDisksList();
 
-    std::cout << "Found disks:\n";
+    std::vector<std::vector<std::string>> disksInfo{
+        {"ID", "type", "capacity", "vendor", "model"}
+    };
+
     for (const auto& disk : disks)
-        std::cout << "  " << disk.GetDeviceId() << '\n';
+        disksInfo.emplace_back(
+        std::vector {
+            disk.GetDeviceId(),
+            disk.GetDriveType(),
+            formatBytes(disk.GetCapacity()),
+            disk.GetVendor(),
+            disk.GetModel()
+        });
+
+    std::cout << "Found disks:\n" << formatTable(disksInfo);
 
     // Create persistent probes
     auto probeUptrs = systemUtilsFactory.getProbes();
