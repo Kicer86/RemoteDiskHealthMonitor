@@ -10,7 +10,10 @@ add_library(common OBJECT
     DiskSummary.h
     DiskInfo.h
     DiskInfo.cpp
-    JsonSerialize.h)
+    JsonSerialize.h
+    Utils.cpp
+    Utils.h
+)
 
 target_include_directories(common
     PUBLIC
