@@ -217,7 +217,8 @@ int main(int argc, char** argv)
 
     // Create persistent probes
     auto probeUptrs = systemUtilsFactory.getProbes();
-    auto probeEntries = std::ranges::to<std::vector<ProbeEntry>>(std::views::transform(probeUptrs, [](auto&& probe) { return ProbeEntry(std::move(probe)); }));
+    std::vector<ProbeEntry> probeEntries;
+    std::ranges::transform(probeUptrs, std::back_inserter(probeEntries), [](auto&& probe) { return ProbeEntry(std::move(probe)); });
 
     // Create HTTP server
     HttpServer server(agentName, RDHMPort);
