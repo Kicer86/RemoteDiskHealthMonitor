@@ -27,6 +27,9 @@ jobs:
           build-essential cmake pkg-config debhelper devscripts \
           fakeroot dpkg-dev
 
+    - name: Verify package metadata version
+      run: cmake -DVERIFY_ONLY=ON -P packaging/sync-package-version.cmake
+
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
       run: |
@@ -39,15 +42,14 @@ jobs:
 
     - name: Build package
       run: |
+        VERSION="$(cmake -DPRINT_VERSION=ON -P packaging/sync-package-version.cmake)"
         PKG_DIR=$(mktemp -d)
-        cp -a . "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}"
+        cp -a . "$PKG_DIR/${{ matrix.component }}-${VERSION}"
         cp -a packaging/deb/${{ matrix.component }}/debian \
-              "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}/debian"
-        cd "$PKG_DIR/${{ matrix.component }}-${{ env.VERSION }}"
+              "$PKG_DIR/${{ matrix.component }}-${VERSION}/debian"
+        cd "$PKG_DIR/${{ matrix.component }}-${VERSION}"
         dpkg-buildpackage -b -us -uc
         ls -lh "$PKG_DIR"/*.deb
-      env:
-        VERSION: "0.2.0"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -77,6 +79,9 @@ jobs:
         dnf install -y \
           cmake gcc-c++ make rpm-build systemd-rpm-macros
 
+    - name: Verify package metadata version
+      run: cmake -DVERIFY_ONLY=ON -P packaging/sync-package-version.cmake
+
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
       run: |
@@ -105,6 +110,15 @@ jobs:
           "$RPMBUILD_DIR/SPECS/${{ matrix.component }}.spec"
 
         find "$RPMBUILD_DIR/RPMS/" -name '*.rpm' -exec ls -lh {} \;
+        mkdir -p /tmp/rdhm-packages
+        find "$RPMBUILD_DIR/RPMS/" -name '*.rpm' -exec cp {} /tmp/rdhm-packages/ \;
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rpm-${{ matrix.component }}
+        path: /tmp/rdhm-packages/*.rpm
+        if-no-files-found: warn
 
   pacman:
     name: Pacman packages (Arch)
@@ -123,6 +137,9 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Verify package metadata version
+      run: cmake -DVERIFY_ONLY=ON -P packaging/sync-package-version.cmake
 
     - name: Install monitor build dependencies
       if: matrix.component == 'rdhm-monitor'
@@ -152,3 +169,12 @@ jobs:
         cd "$BUILD_DIR"
         sudo -u builder makepkg -sf --noconfirm --skipchecksums
         ls -lh "$BUILD_DIR"/*.pkg.tar.zst
+        mkdir -p /tmp/rdhm-packages
+        cp "$BUILD_DIR"/*.pkg.tar.zst /tmp/rdhm-packages/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pacman-${{ matrix.component }}
+        path: /tmp/rdhm-packages/*.pkg.tar.zst
+        if-no-files-found: warn
