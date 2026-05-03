@@ -10,6 +10,18 @@ set(CMAKE_CXX_STANDARD 23)
 option(BUILD_AGENT   "Build the agent component"   ON)
 option(BUILD_MONITOR "Build the monitor component" ON)
 
+add_custom_target(sync-package-version
+    COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/packaging/sync-package-version.cmake
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMENT "Synchronizing package metadata with project version ${PROJECT_VERSION}"
+)
+
+add_custom_target(verify-package-version
+    COMMAND ${CMAKE_COMMAND} -DVERIFY_ONLY=ON -P ${PROJECT_SOURCE_DIR}/packaging/sync-package-version.cmake
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMENT "Verifying package metadata against project version ${PROJECT_VERSION}"
+)
+
 if(MSVC)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)      # when msvc, build gtest with shared crt library
     SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

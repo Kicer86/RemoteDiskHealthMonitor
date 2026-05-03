@@ -1,0 +1,35 @@
+name: Release Packages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  packages:
+    uses: ./.github/workflows/build-packages.yml
+    with:
+      expected-tag: ${{ github.ref_name }}
+      if-no-files-found: error
+
+  release:
+    name: Create draft release
+    needs: packages
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download packages
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+        merge-multiple: true
+
+    - name: Create draft release
+      uses: softprops/action-gh-release@v2
+      with:
+        draft: true
+        name: Remote Disc Health Monitor ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
+        files: dist/*
