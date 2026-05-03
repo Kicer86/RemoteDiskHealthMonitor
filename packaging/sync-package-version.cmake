@@ -17,7 +17,7 @@ set(PROJECT_PACKAGE_VERSION "${CMAKE_MATCH_1}")
 set(PACKAGE_RELEASE "1")
 
 if(PRINT_VERSION)
-    message("${PROJECT_PACKAGE_VERSION}")
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E echo "${PROJECT_PACKAGE_VERSION}")
     return()
 endif()
 

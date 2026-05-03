@@ -79,11 +79,12 @@ jobs:
 
     - name: Build package
       run: |
+        VERSION="$(cmake -DPRINT_VERSION=ON -P packaging/sync-package-version.cmake)"
         PKG_DIR=$(mktemp -d)
-        cp -a . "$PKG_DIR/${{ matrix.component }}-${{ needs.prepare.outputs.version }}"
+        cp -a . "$PKG_DIR/${{ matrix.component }}-${VERSION}"
         cp -a packaging/deb/${{ matrix.component }}/debian \
-              "$PKG_DIR/${{ matrix.component }}-${{ needs.prepare.outputs.version }}/debian"
-        cd "$PKG_DIR/${{ matrix.component }}-${{ needs.prepare.outputs.version }}"
+              "$PKG_DIR/${{ matrix.component }}-${VERSION}/debian"
+        cd "$PKG_DIR/${{ matrix.component }}-${VERSION}"
         dpkg-buildpackage -b -us -uc
         mkdir -p /tmp/rdhm-packages
         cp "$PKG_DIR"/*.deb /tmp/rdhm-packages/
@@ -132,7 +133,8 @@ jobs:
         mkdir -p "$RPMBUILD_DIR"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
         SPEC="packaging/rpm/${{ matrix.component }}.spec"
-        PKG_NAME="${{ matrix.component }}-${{ needs.prepare.outputs.version }}"
+        VERSION="$(cmake -DPRINT_VERSION=ON -P packaging/sync-package-version.cmake)"
+        PKG_NAME="${{ matrix.component }}-${VERSION}"
 
         tar czf "$RPMBUILD_DIR/SOURCES/${PKG_NAME}.tar.gz" \
           --transform "s,^\.,${PKG_NAME}," \
@@ -187,13 +189,16 @@ jobs:
 
         BUILD_DIR=$(mktemp -d)
         PKGBUILD_DIR="packaging/arch/${{ matrix.component }}"
-        PKG_NAME="${{ matrix.component }}-${{ needs.prepare.outputs.version }}"
+        VERSION="$(cmake -DPRINT_VERSION=ON -P packaging/sync-package-version.cmake)"
+        PKG_NAME="${{ matrix.component }}-${VERSION}"
 
         tar czf "$BUILD_DIR/${PKG_NAME}.tar.gz" \
           --transform "s,^\.,${PKG_NAME}," \
           --exclude='.git' --exclude='build' .
 
         cp "$PKGBUILD_DIR"/* "$BUILD_DIR/"
+        test -f "$BUILD_DIR/${PKG_NAME}.tar.gz"
+        ls -lh "$BUILD_DIR/${PKG_NAME}.tar.gz"
 
         chown -R builder:builder "$BUILD_DIR"
         cd "$BUILD_DIR"
