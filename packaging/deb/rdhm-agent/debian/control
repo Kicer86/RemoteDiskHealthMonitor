@@ -2,7 +2,7 @@ Source: rdhm-agent
 Section: admin
 Priority: optional
 Maintainer: Michał Walenciak <michalwalenciak@gmail.com>
-Uploaders: Wojciech Kucjas <wojciech.kucjas@gmail.com>
+Uploaders: Michał Walenciak <michalwalenciak@gmail.com>
 Build-Depends: debhelper-compat (= 13),
                cmake (>= 3.16),
                g++ (>= 10),
