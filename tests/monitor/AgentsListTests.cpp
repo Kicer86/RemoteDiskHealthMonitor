@@ -101,7 +101,7 @@ TEST(AgentsListTest, listofAvailableRoles)
         listOfRoles.append(it.value());
 
     EXPECT_THAT(listOfRoles, IsSupersetOf( {"agentName", "agentHealth", "agentDetectionType",
-                                           "agentHost", "agentPort", "agentConnectionState"} ));
+                                            "agentHost", "agentPort", "agentConnectionState"} ));
 }
 
 
