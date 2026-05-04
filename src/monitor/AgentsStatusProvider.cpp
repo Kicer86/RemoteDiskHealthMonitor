@@ -47,8 +47,7 @@ void AgentsStatusProvider::observe(const AgentInformation& info)
         .toStdString();
 
     AgentConnection agentConn;
-    agentConn.connection = cpp_restapi::createQtConnection(
-        m_nam, address, {});
+    agentConn.connection = cpp_restapi::createQtConnection(m_nam, address, {});
 
     m_connections.insert(info, std::move(agentConn));
 
