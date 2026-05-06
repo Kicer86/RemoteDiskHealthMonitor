@@ -111,14 +111,13 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
     if (it == m_connections.end() || !it->connection)
         return;
 
-    const std::string url = it->connection->url() + "/api/v1/info";
-
     QPointer<AgentsStatusProvider> self(this);
-    it->connection->fetch(url,
+    it->connection->fetch("api/v1/info",
         [self, info](cpp_restapi::Response response)
         {
             if (!self)
                 return;
+
             try
             {
                 nlohmann::json j = nlohmann::json::parse(response.body);
