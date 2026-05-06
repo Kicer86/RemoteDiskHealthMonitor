@@ -16,7 +16,7 @@ if(BUILD_AGENT)
 endif()
 
 if(BUILD_MONITOR)
-    list(APPEND _test_deps monitorTests)
+    list(APPEND _test_deps monitorTests monitorIntegrationTests)
 endif()
 
 add_custom_target(RunUnitTests ALL
