@@ -111,12 +111,16 @@ void AgentsStatusProvider::fetchAgentInfo(const AgentInformation& info)
     if (it == m_connections.end() || !it->connection)
         return;
 
+    std::cout << "Fetching info from agent " << info.name().toStdString() << "\n";
+
     QPointer<AgentsStatusProvider> self(this);
     it->connection->fetch("api/v1/info",
         [self, info](cpp_restapi::Response response)
         {
             if (!self)
                 return;
+
+            std::cout << "Got info response from agent " << info.name().toStdString() << "\n";
 
             try
             {
@@ -165,6 +169,8 @@ void AgentsStatusProvider::handleSseEvent(const AgentInformation& info, const cp
     auto it = m_connections.find(info);
     if (it == m_connections.end())
         return;
+
+    std::cout << "Got SSE event from agent " << info.name().toStdString() << "\n";
 
     it->reconnectDelay = std::chrono::milliseconds{1000};
     it->lastEventTime = std::chrono::steady_clock::now();
