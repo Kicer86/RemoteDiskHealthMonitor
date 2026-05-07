@@ -25,7 +25,7 @@
 
 namespace
 {
-    constexpr auto WaitTimeout = std::chrono::milliseconds{3000};
+    constexpr auto WaitTimeout = std::chrono::milliseconds{100};
 
     bool waitUntil(const std::function<bool()>& condition,
                    std::chrono::milliseconds timeout = WaitTimeout)
