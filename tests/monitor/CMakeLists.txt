@@ -2,12 +2,19 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
 
 add_executable(monitorTests
+    AgentInformationTests.cpp
     AgentsListTests.cpp
+    ConfigurationTests.cpp
     IAgentsStatusProviderMock.hpp
+    ManualAgentsValidatorTests.cpp
+    ${PROJECT_SOURCE_DIR}/src/monitor/Configuration.cpp
+    ${PROJECT_SOURCE_DIR}/src/monitor/Configuration.hpp
     ${PROJECT_SOURCE_DIR}/src/monitor/AgentsList.cpp
     ${PROJECT_SOURCE_DIR}/src/monitor/AgentsList.hpp
     ${PROJECT_SOURCE_DIR}/src/monitor/AgentInformation.cpp
     ${PROJECT_SOURCE_DIR}/src/monitor/IAgentsStatusProvider.hpp
+    ${PROJECT_SOURCE_DIR}/src/monitor/ManualAgentsValidator.cpp
+    ${PROJECT_SOURCE_DIR}/src/monitor/ManualAgentsValidator.hpp
 )
 
 target_include_directories(monitorTests
