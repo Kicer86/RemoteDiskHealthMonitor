@@ -231,7 +231,7 @@ namespace
         QString lastRefreshed;
     };
 
-    void connectProvider(AgentsStatusProvider& provider, const AgentInformation info, AgentStatusProviderStatesHistory& statesHistory)
+    void connectProvider(AgentsStatusProvider& provider, const AgentInformation& info, AgentStatusProviderStatesHistory& statesHistory)
     {
         QObject::connect(&provider, &IAgentsStatusProvider::connectionStateChanged,
                         [&](const AgentInformation& changedAgent, ConnectionState state) {
