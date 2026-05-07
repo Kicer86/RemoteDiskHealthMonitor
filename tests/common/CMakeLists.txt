@@ -1,7 +1,9 @@
 
 add_executable(commonTests
     ProbeStatusTests.cpp
+    SmartDataTests.cpp
     SerializationTests.cpp
+    UtilsTests.cpp
 )
 
 target_include_directories(commonTests
