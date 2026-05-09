@@ -46,9 +46,15 @@ void AgentsList::removeAgent(const AgentInformation& info)
 
     if (it != m_agents.end())
     {
+        if (info.detectionSource() == AgentInformation::DetectionSource::ZeroConf &&
+            it->detectionSource() == AgentInformation::DetectionSource::Hardcoded)
+        {
+            return;
+        }
+
         const int pos = std::distance(m_agents.begin(), it);
 
-       removeAgentAt(pos);
+        removeAgentAt(pos);
     }
 }
 

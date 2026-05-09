@@ -89,6 +89,25 @@ TEST(AgentsListTest, agentRemoval)
 }
 
 
+TEST(AgentsListTest, zeroconfLossDoesNotRemoveMatchingHardcodedAgent)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation hardcoded("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::Hardcoded);
+    AgentInformation zeroconf("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::ZeroConf);
+
+    aal.addAgent(hardcoded);
+    aal.removeAgent(zeroconf);
+
+    ASSERT_EQ(aal.rowCount({}), 1);
+
+    const QModelIndex idx = aal.index(0, 0);
+    EXPECT_EQ(idx.data(AgentsList::AgentDetectionTypeRole),
+              static_cast<int>(AgentInformation::DetectionSource::Hardcoded));
+}
+
+
 TEST(AgentsListTest, listofAvailableRoles)
 {
     NiceMock<IAgentsStatusProviderMock> statusProvider;
