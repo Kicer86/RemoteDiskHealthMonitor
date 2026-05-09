@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <array>
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 
 #include "../SmartReader.h"
@@ -20,22 +21,23 @@ namespace
 
     std::string runSmartctl(const Disk& disk)
     {
+        std::string output;
+
         if (!isValidDeviceId(disk.GetDeviceId()))
         {
             std::cerr << "Invalid device ID, skipping smartctl: " << disk.GetDeviceId() << '\n';
-            return {};
         }
-
-        std::string output;
-        std::array<char, 4096> buffer;
-
-        const std::string cmd = "smartctl -a /dev/" + disk.GetDeviceId();
-        FILE* pipe = popen(cmd.c_str(), "r");
-        if (pipe)
+        else
         {
-            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-                output += buffer.data();
-            pclose(pipe);
+            std::array<char, 4096> buffer;
+            const std::string cmd = "smartctl -a /dev/" + disk.GetDeviceId();
+            FILE* pipe = popen(cmd.c_str(), "r");
+            if (pipe)
+            {
+                while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                    output += buffer.data();
+                pclose(pipe);
+            }
         }
 
         return output;

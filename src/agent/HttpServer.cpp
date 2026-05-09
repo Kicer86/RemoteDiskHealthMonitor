@@ -9,6 +9,7 @@
 #include <atomic>
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <iomanip>
 #include <list>
 #include <condition_variable>
@@ -239,12 +240,12 @@ void HttpServer::setStatusData(GeneralHealth::Health overallHealth, std::vector<
         m_impl->disks = std::move(disks);
 
         const auto now = std::chrono::system_clock::now();
-        const auto time_t = std::chrono::system_clock::to_time_t(now);
+        const auto nowTime = std::chrono::system_clock::to_time_t(now);
         std::tm tm_buf{};
 #ifdef _WIN32
-        gmtime_s(&tm_buf, &time_t);
+        gmtime_s(&tm_buf, &nowTime);
 #else
-        gmtime_r(&time_t, &tm_buf);
+        gmtime_r(&nowTime, &tm_buf);
 #endif
         std::ostringstream oss;
         oss << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%SZ");

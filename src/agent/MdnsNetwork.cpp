@@ -134,8 +134,8 @@ timeval toTimeval(std::chrono::microseconds timeout)
     const auto microseconds = timeout - seconds;
 
     timeval result{};
-    result.tv_sec = static_cast<decltype(result.tv_sec)>(seconds.count());
-    result.tv_usec = static_cast<decltype(result.tv_usec)>(microseconds.count());
+    result.tv_sec = seconds.count();
+    result.tv_usec = microseconds.count();
     return result;
 }
 
@@ -189,29 +189,30 @@ std::vector<int> openMdnsServiceSockets()
 std::vector<int> waitForReadableSockets(const std::vector<int>& sockets,
                                         std::chrono::microseconds timeout)
 {
-    if (sockets.empty())
-        return {};
-
-    fd_set readable;
-    FD_ZERO(&readable);
-
-    int nfds = 0;
-    for (int socket : sockets) {
-        if (socket >= nfds)
-            nfds = socket + 1;
-        FD_SET(socket, &readable);
-    }
-
-    timeval tv = toTimeval(timeout);
-    if (select(nfds, &readable, nullptr, nullptr, &tv) <= 0)
-        return {};
-
     std::vector<int> ready;
-    ready.reserve(sockets.size());
 
-    for (int socket : sockets) {
-        if (FD_ISSET(socket, &readable))
-            ready.push_back(socket);
+    if (!sockets.empty())
+    {
+        fd_set readable;
+        FD_ZERO(&readable);
+
+        int nfds = 0;
+        for (int socket : sockets) {
+            if (socket >= nfds)
+                nfds = socket + 1;
+            FD_SET(socket, &readable);
+        }
+
+        timeval tv = toTimeval(timeout);
+        if (select(nfds, &readable, nullptr, nullptr, &tv) > 0)
+        {
+            ready.reserve(sockets.size());
+
+            for (int socket : sockets) {
+                if (FD_ISSET(socket, &readable))
+                    ready.push_back(socket);
+            }
+        }
     }
 
     return ready;

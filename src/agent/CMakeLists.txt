@@ -27,6 +27,10 @@ ADD_EXECUTABLE( agent
 target_include_directories(agent
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src
+)
+
+target_include_directories(agent
+    SYSTEM PRIVATE
         ${PROJECT_SOURCE_DIR}/external/cpp-httplib
         ${PROJECT_SOURCE_DIR}/external/nlohmann-json/single_include
         ${PROJECT_SOURCE_DIR}/external/mdns

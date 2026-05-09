@@ -146,37 +146,39 @@ GeneralHealth::Health SmartHealthAnalyzer::GetStatus(const Disk& disk) const
 
 nlohmann::json SmartHealthAnalyzer::GetRawData(const Disk& disk) const
 {
+    auto j = nlohmann::json{{"type", "smart"}, {"attributes", nlohmann::json::array()}};
+
     auto it = m_cachedSmartData.find(disk.GetDeviceId());
-    if (it == m_cachedSmartData.end())
-        return nlohmann::json{{"type", "smart"}, {"attributes", nlohmann::json::array()}};
-
-    const auto& smart = it->second;
-
-    nlohmann::json attrs = nlohmann::json::array();
-    for (const auto& attr : smart.attributes)
+    if (it != m_cachedSmartData.end())
     {
-        attrs.push_back({
-            {"id", attr.id},
-            {"name", attr.name},
-            {"value", attr.value},
-            {"worst", attr.worst},
-            {"threshold", attr.threshold},
-            {"rawVal", attr.rawVal}
-        });
+        const auto& smart = it->second;
+
+        nlohmann::json attrs = nlohmann::json::array();
+        for (const auto& attr : smart.attributes)
+        {
+            attrs.push_back({
+                {"id", attr.id},
+                {"name", attr.name},
+                {"value", attr.value},
+                {"worst", attr.worst},
+                {"threshold", attr.threshold},
+                {"rawVal", attr.rawVal}
+            });
+        }
+
+        j["attributes"] = attrs;
+
+        auto testIt = m_cachedTestStatus.find(disk.GetDeviceId());
+        SmartTestStatus testStatus;
+        if (testIt != m_cachedTestStatus.end())
+            testStatus = testIt->second;
+
+        j["selfTestStatus"] = {
+            {"running", testStatus.running},
+            {"percentRemaining", testStatus.percentRemaining},
+            {"lastResult", testStatus.lastResult}
+        };
     }
-
-    auto j = nlohmann::json{{"type", "smart"}, {"attributes", attrs}};
-
-    auto testIt = m_cachedTestStatus.find(disk.GetDeviceId());
-    SmartTestStatus testStatus;
-    if (testIt != m_cachedTestStatus.end())
-        testStatus = testIt->second;
-
-    j["selfTestStatus"] = {
-        {"running", testStatus.running},
-        {"percentRemaining", testStatus.percentRemaining},
-        {"lastResult", testStatus.lastResult}
-    };
 
     return j;
 }
