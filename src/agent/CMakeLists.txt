@@ -6,6 +6,8 @@ ADD_EXECUTABLE( agent
     SmartReader.h
     HttpServer.h
     HttpServer.cpp
+    MdnsNetwork.h
+    MdnsNetwork.cpp
     MdnsPublisher.h
     MdnsPublisher.cpp
     OutputParsersUtils.h
