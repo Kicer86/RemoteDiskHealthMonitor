@@ -12,9 +12,14 @@ ApplicationWindow {
     visible: true
     title: qsTr("Remote Disc Health Monitor")
 
+    property bool quitRequested: false
+
     color: palette.window
 
     onClosing: function(close) {
+        if (root.quitRequested)
+            return
+
         close.accepted = false
         root.hide()
     }
