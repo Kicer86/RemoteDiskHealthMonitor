@@ -70,6 +70,24 @@ TEST(AgentsListTest, doubleAgentRemoveShouldBeSafe)
 }
 
 
+TEST(AgentsListTest, removeAgentAtIgnoresInvalidIndexes)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Krzysiu", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::Hardcoded);
+
+    aal.addAgent(info);
+    aal.removeAgentAt(-1);
+    aal.removeAgentAt(1);
+
+    ASSERT_EQ(aal.rowCount({}), 1);
+
+    const auto& agents = aal.agents();
+    EXPECT_THAT(agents, Contains(info));
+}
+
+
 TEST(AgentsListTest, agentRemoval)
 {
     NiceMock<IAgentsStatusProviderMock> statusProvider;
