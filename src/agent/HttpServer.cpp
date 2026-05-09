@@ -45,7 +45,8 @@ struct HttpServer::Impl
 
     // Refresh cooldown
     static constexpr int RefreshCooldownSeconds = 600;  // 10 minutes
-    std::chrono::steady_clock::time_point lastRefreshTime{};
+    std::chrono::steady_clock::time_point lastRefreshTime =
+        std::chrono::steady_clock::now() - std::chrono::seconds{RefreshCooldownSeconds};
     std::mutex refreshMutex;
 
     // SSE support
