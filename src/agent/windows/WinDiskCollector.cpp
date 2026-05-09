@@ -4,7 +4,11 @@
 std::vector<Disk> WinDiskCollector::GetDisksList()
 {
     WMICommunication wmi;
-    wmi.WMIInit(WMICommunication::WmiNamespace::Discs);
-    wmi.CollectInfoAboutDiscsViaWMI();
+    if (!wmi.WMIInit(WMICommunication::WmiNamespace::Discs))
+        return {};
+
+    if (!wmi.CollectInfoAboutDiscsViaWMI())
+        return {};
+
     return wmi.GetDisksCollection();
 }

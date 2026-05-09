@@ -30,12 +30,15 @@ public:
 	const std::vector<Disk> GetDisksCollection() const;
 
 private:
-	IWbemLocator* m_initialLocatorToWMI;
-	IWbemServices* m_services;
-	IEnumWbemClassObject* m_pEnumerator;
+	IWbemLocator* m_initialLocatorToWMI = nullptr;
+	IWbemServices* m_services = nullptr;
+	IEnumWbemClassObject* m_pEnumerator = nullptr;
+	bool m_comInitialized = false;
 	SmartData m_smartData;
 	std::vector<Disk> m_discsCollection;
 
+	void ReleaseEnumerator();
+	void ReleaseComObjects();
 	void FeedSmartDataStructure(const std::vector<BYTE>& _data, const LONG& _dataSize);
 	void FeedThresholds(const std::vector<BYTE>& _data, const LONG& _dataSize);
 	std::string StringFromVariant(VARIANT& vt);
