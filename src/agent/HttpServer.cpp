@@ -21,9 +21,10 @@ namespace
 {
     bool isValidDiskName(const std::string& name)
     {
-        return !name.empty() && name.size() <= 64 &&
+        return !name.empty() && name.size() <= 128 &&
                std::ranges::all_of(name, [](char c) {
-                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
+                   return std::isalnum(static_cast<unsigned char>(c)) ||
+                          c == '-' || c == '_' || c == '.' || c == '\\' || c == ':';
                });
     }
 }
