@@ -179,9 +179,9 @@ TEST_F(SmartHealthAnalyzerTest, SeagateProfileMasksSeekErrorRate)
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
     EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
-    m_analyzer->Refresh({m_disk});
+    m_analyzer->Refresh({seagateDisk});
 
-    EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(m_disk));
+    EXPECT_EQ(GeneralHealth::GOOD, m_analyzer->GetStatus(seagateDisk));
 }
 
 
@@ -198,9 +198,9 @@ TEST_F(SmartHealthAnalyzerTest, UnknownVendorUsesGenericProfile)
 
     EXPECT_CALL(*m_reader, ReadSMARTData(_)).WillOnce(Return(data));
     EXPECT_CALL(*m_reader, ReadTestStatus(_)).WillOnce(Return(SmartTestStatus{}));
-    m_analyzer->Refresh({m_disk});
+    m_analyzer->Refresh({unknownDisk});
 
-    EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(m_disk));
+    EXPECT_EQ(GeneralHealth::CHECK_STATUS, m_analyzer->GetStatus(unknownDisk));
 }
 
 
