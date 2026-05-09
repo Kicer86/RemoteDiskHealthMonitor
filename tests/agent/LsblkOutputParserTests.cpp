@@ -38,3 +38,39 @@ TEST(LsblkOutputParserTest, fullOutput)
     ));
 }
 
+
+TEST(LsblkOutputParserTest, ignoresMalformedRows)
+{
+    const auto result = LsblkOutputParser::parse(
+        R"(NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+           sda 8:0 0 120034123776 0 disk
+           malformed-row
+           sda1 8:1 0 209715200 0 part /boot
+           sdb 8:16 0 not-a-number 0 disk
+        )"
+    );
+
+    EXPECT_THAT(result, UnorderedElementsAre(
+        LsblkOutputParser::LsblkEntry{ .name = "sda", .type = "disk",  .size = 120034123776, .partitions = {"sda1"}, .major = 8, .minor = 0 }
+    ));
+}
+
+
+TEST(LsblkOutputParserTest, doesNotMatchSiblingDiskByPrefix)
+{
+    const auto result = LsblkOutputParser::parse(
+        R"(NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+           sda 8:0 0 1000 0 disk
+           sdaa 65:160 0 2000 0 disk
+           sdaa1 65:161 0 1900 0 part /data
+           nvme0n1 259:0 0 3000 0 disk
+           nvme0n1p1 259:1 0 2900 0 part /fast
+        )"
+    );
+
+    EXPECT_THAT(result, UnorderedElementsAre(
+        LsblkOutputParser::LsblkEntry{ .name = "sda", .type = "disk", .size = 1000, .partitions = {}, .major = 8, .minor = 0 },
+        LsblkOutputParser::LsblkEntry{ .name = "sdaa", .type = "disk", .size = 2000, .partitions = {"sdaa1"}, .major = 65, .minor = 160 },
+        LsblkOutputParser::LsblkEntry{ .name = "nvme0n1", .type = "disk", .size = 3000, .partitions = {"nvme0n1p1"}, .major = 259, .minor = 0 }
+    ));
+}
