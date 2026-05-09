@@ -377,6 +377,9 @@ TEST(AgentsListTest, agentDetectionTypeRoleFetching)
     AgentInformation info1("John Connor", QHostAddress("192.168.1.15"), 1998, AgentInformation::DetectionSource::Hardcoded);
     AgentInformation info2("T-1000", QHostAddress("192.168.1.16"), 1998, AgentInformation::DetectionSource::ZeroConf);
 
+    EXPECT_CALL(statusProvider, observe(info1)).Times(1);
+    EXPECT_CALL(statusProvider, observe(info2)).Times(1);
+
     aal.addAgent(info1);
     aal.addAgent(info2);
 
