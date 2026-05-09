@@ -37,7 +37,7 @@ set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 
 if(BUILD_MONITOR)
-    add_subdirectory(external/QtZeroConf)
+    add_subdirectory(external/QtZeroConf EXCLUDE_FROM_ALL)
 
     set(CppRestAPI_QtBackend      ON  CACHE BOOL "" FORCE)
     set(CppRestAPI_GitHub         OFF CACHE BOOL "" FORCE)
