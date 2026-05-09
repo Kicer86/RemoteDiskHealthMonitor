@@ -1,7 +1,13 @@
 #!/bin/sh
 set -e
 
+run_systemctl() {
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl "$@" || true
+    fi
+}
+
 if [ "$1" = "configure" ]; then
-    systemctl daemon-reload
-    systemctl enable rdhm-agent.service
+    run_systemctl daemon-reload
+    run_systemctl enable rdhm-agent.service
 fi
