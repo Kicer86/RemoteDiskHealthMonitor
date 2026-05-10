@@ -1,6 +1,7 @@
 #include "Disk.h"
 
 #include <algorithm>
+#include <cctype>
 
 Disk::Disk(const std::string& _deviceId)
     : m_deviceId(_deviceId)

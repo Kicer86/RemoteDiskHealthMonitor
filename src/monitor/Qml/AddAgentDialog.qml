@@ -6,26 +6,24 @@ Dialog {
     id: dialog
 
     title: qsTr("Add Agent")
-    standardButtons: Dialog.Ok | Dialog.Cancel
 
     modal: true
     anchors.centerIn: parent
     width: 360
 
-    onAccepted: {
-        agentsValidator.addNewAgent(nameField.text, ipField.text, portField.text)
+    function resetFields() {
         nameField.text = ""
         ipField.text = ""
         portField.text = "1630"
         errorLabel.text = ""
     }
 
-    onRejected: {
-        nameField.text = ""
-        ipField.text = ""
-        portField.text = "1630"
+    function submitAgent() {
         errorLabel.text = ""
+        agentsValidator.addNewAgent(nameField.text, ipField.text, portField.text)
     }
+
+    onRejected: resetFields()
 
     Connections {
         target: agentsValidator
@@ -35,7 +33,22 @@ Dialog {
         }
 
         function onAgentDiscovered() {
+            dialog.resetFields()
             dialog.close()
+        }
+    }
+
+    footer: DialogButtonBox {
+        Button {
+            text: qsTr("OK")
+            DialogButtonBox.buttonRole: DialogButtonBox.ActionRole
+            onClicked: dialog.submitAgent()
+        }
+
+        Button {
+            text: qsTr("Cancel")
+            DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            onClicked: dialog.reject()
         }
     }
 

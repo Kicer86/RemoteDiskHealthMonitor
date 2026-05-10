@@ -9,6 +9,7 @@
 #include <atomic>
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <iomanip>
 #include <list>
 #include <condition_variable>
@@ -21,9 +22,9 @@ namespace
 {
     bool isValidDiskName(const std::string& name)
     {
-        return !name.empty() && name.size() <= 64 &&
+        return !name.empty() && name.size() <= 128 &&
                std::ranges::all_of(name, [](char c) {
-                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_';
+                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.' || c == '\\' || c == ':';
                });
     }
 }
@@ -45,7 +46,8 @@ struct HttpServer::Impl
 
     // Refresh cooldown
     static constexpr int RefreshCooldownSeconds = 600;  // 10 minutes
-    std::chrono::steady_clock::time_point lastRefreshTime{};
+    std::chrono::steady_clock::time_point lastRefreshTime =
+        std::chrono::steady_clock::now() - std::chrono::seconds{RefreshCooldownSeconds};
     std::mutex refreshMutex;
 
     // SSE support
@@ -237,12 +239,12 @@ void HttpServer::setStatusData(GeneralHealth::Health overallHealth, std::vector<
         m_impl->disks = std::move(disks);
 
         const auto now = std::chrono::system_clock::now();
-        const auto time_t = std::chrono::system_clock::to_time_t(now);
+        const auto nowTime = std::chrono::system_clock::to_time_t(now);
         std::tm tm_buf{};
 #ifdef _WIN32
-        gmtime_s(&tm_buf, &time_t);
+        gmtime_s(&tm_buf, &nowTime);
 #else
-        gmtime_r(&time_t, &tm_buf);
+        gmtime_r(&nowTime, &tm_buf);
 #endif
         std::ostringstream oss;
         oss << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%SZ");

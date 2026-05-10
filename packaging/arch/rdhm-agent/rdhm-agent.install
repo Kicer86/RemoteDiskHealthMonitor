@@ -1,23 +1,29 @@
+run_systemctl() {
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl "$@" || true
+    fi
+}
+
 post_install() {
-    systemctl daemon-reload
-    systemctl enable rdhm-agent.service
+    run_systemctl daemon-reload
+    run_systemctl enable rdhm-agent.service
     echo ">>> Enable and start the agent with: systemctl start rdhm-agent"
 }
 
 pre_upgrade() {
-    systemctl stop rdhm-agent.service || true
+    run_systemctl stop rdhm-agent.service
 }
 
 post_upgrade() {
-    systemctl daemon-reload
-    systemctl restart rdhm-agent.service || true
+    run_systemctl daemon-reload
+    run_systemctl restart rdhm-agent.service
 }
 
 pre_remove() {
-    systemctl stop rdhm-agent.service || true
-    systemctl disable rdhm-agent.service || true
+    run_systemctl stop rdhm-agent.service
+    run_systemctl disable rdhm-agent.service
 }
 
 post_remove() {
-    systemctl daemon-reload
+    run_systemctl daemon-reload
 }

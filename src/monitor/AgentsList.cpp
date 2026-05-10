@@ -28,14 +28,24 @@ void AgentsList::addAgent(const AgentInformation& info)
 {
     auto it = std::find(m_agents.begin(), m_agents.end(), info);
 
-    // we do not need duplicates
     if (it == m_agents.end())
     {
-        beginInsertRows({}, m_agents.size(), m_agents.size());
+        const int row = rowCount({});
+
+        beginInsertRows({}, row, row);
         m_agents.append(info);
         endInsertRows();
 
         m_statusProvider.observe(info);
+    }
+    else if (info.detectionSource() == AgentInformation::DetectionSource::Hardcoded &&
+             it->detectionSource() == AgentInformation::DetectionSource::ZeroConf)
+    {
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
+        m_agents[pos] = info;
+
+        const QModelIndex idx = index(pos, 0);
+        emit dataChanged(idx, idx, {AgentDetectionTypeRole});
     }
 }
 
@@ -46,15 +56,24 @@ void AgentsList::removeAgent(const AgentInformation& info)
 
     if (it != m_agents.end())
     {
-        const int pos = std::distance(m_agents.begin(), it);
+        if (info.detectionSource() == AgentInformation::DetectionSource::ZeroConf &&
+            it->detectionSource() == AgentInformation::DetectionSource::Hardcoded)
+        {
+            return;
+        }
 
-       removeAgentAt(pos);
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
+
+        removeAgentAt(pos);
     }
 }
 
 
 void AgentsList::removeAgentAt(int position)
 {
+    if (position < 0 || position >= rowCount({}))
+        return;
+
     const AgentInformation info = m_agents[position];
 
     beginRemoveRows({}, position, position);
@@ -77,7 +96,7 @@ const QVector<AgentInformation>& AgentsList::agents() const
 
 int AgentsList::rowCount(const QModelIndex& parent) const
 {
-    return parent.isValid()? 0: m_agents.size();
+    return parent.isValid()? 0: static_cast<int>(m_agents.size());
 }
 
 
@@ -85,7 +104,7 @@ QVariant AgentsList::data(const QModelIndex& index, int role) const
 {
     QVariant result;
 
-    if (index.column() == 0 && index.row() < m_agents.size())
+    if (index.column() == 0 && index.row() >= 0 && index.row() < rowCount({}))
     {
         const int row = index.row();
 
@@ -198,7 +217,7 @@ void AgentsList::updateAgentHealth(const AgentInformation& info, const GeneralHe
     {
         m_health[info] = health;
 
-        const int pos = std::distance(m_agents.begin(), it);
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
         const QModelIndex idx = index(pos, 0);
 
         emit dataChanged(idx, idx, {AgentHealthRole});
@@ -213,7 +232,7 @@ void AgentsList::updateAgentDiskInfoCollection(const AgentInformation& _info, co
     {
         m_diskInfoCollection[_info] = _diskInfoCollection;
 
-        const int pos = std::distance(m_agents.begin(), it);
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
         const QModelIndex idx = index(pos, 0);
 
         emit dataChanged(idx, idx, { AgentDiskInfoNamesRole });
@@ -229,7 +248,7 @@ void AgentsList::updateConnectionState(const AgentInformation& info, ConnectionS
     {
         m_connectionStates[info] = state;
 
-        const int pos = std::distance(m_agents.begin(), it);
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
         const QModelIndex idx = index(pos, 0);
 
         emit dataChanged(idx, idx, {AgentConnectionStateRole});
@@ -244,7 +263,7 @@ void AgentsList::updateLastRefreshed(const AgentInformation& info, const QString
     {
         m_lastRefreshed[info] = timestamp;
 
-        const int pos = std::distance(m_agents.begin(), it);
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
         const QModelIndex idx = index(pos, 0);
 
         emit dataChanged(idx, idx, {AgentLastRefreshedRole});

@@ -25,6 +25,7 @@ namespace
     std::atomic<bool> g_running{true};
     std::mutex g_bgMutex;
     std::condition_variable g_bgCv;
+    bool g_refreshRequested = false;
 
     void signalHandler(int)
     {
@@ -166,6 +167,15 @@ namespace
         server.setStatusData(overall, std::move(diskInfos));
     }
 
+    void requestBackgroundRefresh()
+    {
+        {
+            std::lock_guard lock(g_bgMutex);
+            g_refreshRequested = true;
+        }
+        g_bgCv.notify_one();
+    }
+
     // Lock hierarchy (acquire in this order to avoid deadlocks):
     //   refreshMutex (HttpServer::Impl) → g_probeMutex → dataMutex → sseMutex
     std::mutex g_probeMutex;
@@ -237,7 +247,7 @@ int main(int argc, char** argv)
             std::lock_guard lock(g_probeMutex);
             publishFromCache(server, probeEntries, disks);
         }
-        g_bgCv.notify_one();
+        requestBackgroundRefresh();
     });
 
     // Initial proactive data collection
@@ -265,7 +275,8 @@ int main(int argc, char** argv)
             {
                 std::unique_lock lock(g_bgMutex);
                 g_bgCv.wait_for(lock, std::chrono::minutes(1),
-                                [] { return !g_running.load(); });
+                                [] { return !g_running.load() || g_refreshRequested; });
+                g_refreshRequested = false;
             }
 
             if (!g_running)

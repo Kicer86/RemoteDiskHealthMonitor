@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 project(RemoteDiscHealthMonitor VERSION 0.2.0)
 
 set(CMAKE_CXX_EXTENSIONS ON)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 23)
 
 option(BUILD_AGENT   "Build the agent component"   ON)
@@ -37,7 +37,16 @@ set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 
 if(BUILD_MONITOR)
-    add_subdirectory(external/QtZeroConf)
+    add_subdirectory(external/QtZeroConf EXCLUDE_FROM_ALL)
+    set_target_properties(QtZeroConf PROPERTIES
+        EXCLUDE_FROM_ALL FALSE
+        PUBLIC_HEADER ""
+    )
+
+    install(TARGETS QtZeroConf
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 
     set(CppRestAPI_QtBackend      ON  CACHE BOOL "" FORCE)
     set(CppRestAPI_GitHub         OFF CACHE BOOL "" FORCE)

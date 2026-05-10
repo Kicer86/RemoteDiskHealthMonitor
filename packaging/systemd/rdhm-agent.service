@@ -6,6 +6,7 @@ After=network.target
 [Service]
 Type=simple
 EnvironmentFile=/etc/rdhm/agent.conf
+RuntimeDirectory=rdhm
 ExecStart=/usr/sbin/rdhm-agent -n ${AGENT_NAME}
 Restart=on-failure
 RestartSec=5

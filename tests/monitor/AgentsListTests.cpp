@@ -70,6 +70,24 @@ TEST(AgentsListTest, doubleAgentRemoveShouldBeSafe)
 }
 
 
+TEST(AgentsListTest, removeAgentAtIgnoresInvalidIndexes)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation info("Krzysiu", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::Hardcoded);
+
+    aal.addAgent(info);
+    aal.removeAgentAt(-1);
+    aal.removeAgentAt(1);
+
+    ASSERT_EQ(aal.rowCount({}), 1);
+
+    const auto& agents = aal.agents();
+    EXPECT_THAT(agents, Contains(info));
+}
+
+
 TEST(AgentsListTest, agentRemoval)
 {
     NiceMock<IAgentsStatusProviderMock> statusProvider;
@@ -86,6 +104,48 @@ TEST(AgentsListTest, agentRemoval)
 
     const auto& agents = aal.agents();
     EXPECT_THAT(agents, Contains(info2));
+}
+
+
+TEST(AgentsListTest, zeroconfLossDoesNotRemoveMatchingHardcodedAgent)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation hardcoded("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::Hardcoded);
+    AgentInformation zeroconf("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::ZeroConf);
+
+    aal.addAgent(hardcoded);
+    aal.removeAgent(zeroconf);
+
+    ASSERT_EQ(aal.rowCount({}), 1);
+
+    const QModelIndex idx = aal.index(0, 0);
+    EXPECT_EQ(idx.data(AgentsList::AgentDetectionTypeRole),
+              static_cast<int>(AgentInformation::DetectionSource::Hardcoded));
+}
+
+
+TEST(AgentsListTest, hardcodedDuplicatePromotesExistingZeroconfAgent)
+{
+    NiceMock<IAgentsStatusProviderMock> statusProvider;
+    AgentsList aal(statusProvider);
+
+    AgentInformation zeroconf("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::ZeroConf);
+    AgentInformation hardcoded("Agent", QHostAddress("192.168.1.12"), 2300, AgentInformation::DetectionSource::Hardcoded);
+
+    aal.addAgent(zeroconf);
+    aal.addAgent(hardcoded);
+
+    ASSERT_EQ(aal.rowCount({}), 1);
+
+    const QModelIndex idx = aal.index(0, 0);
+    EXPECT_EQ(idx.data(AgentsList::AgentDetectionTypeRole),
+              static_cast<int>(AgentInformation::DetectionSource::Hardcoded));
+
+    aal.removeAgent(zeroconf);
+
+    EXPECT_EQ(aal.rowCount({}), 1);
 }
 
 
@@ -339,6 +399,9 @@ TEST(AgentsListTest, agentDetectionTypeRoleFetching)
 
     AgentInformation info1("John Connor", QHostAddress("192.168.1.15"), 1998, AgentInformation::DetectionSource::Hardcoded);
     AgentInformation info2("T-1000", QHostAddress("192.168.1.16"), 1998, AgentInformation::DetectionSource::ZeroConf);
+
+    EXPECT_CALL(statusProvider, observe(info1)).Times(1);
+    EXPECT_CALL(statusProvider, observe(info2)).Times(1);
 
     aal.addAgent(info1);
     aal.addAgent(info2);

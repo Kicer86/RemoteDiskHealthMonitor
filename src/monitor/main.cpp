@@ -57,6 +57,8 @@ int main(int argc, char** argv)
     QObject::connect(&agentsEnumerator, &AgentsExplorer::agentDiscovered, &activeAgents, &AgentsList::addAgent);
     QObject::connect(&agentsEnumerator, &AgentsExplorer::agentLost, &activeAgents, &AgentsList::removeAgent);
 
+    restoreHardcodedAgents(config, activeAgents);
+
     agentsEnumerator.startListening();
 
     QQmlApplicationEngine engine;
@@ -71,8 +73,6 @@ int main(int argc, char** argv)
     TrayIcon trayIcon(activeAgents);
     auto* window = qobject_cast<QWindow*>(engine.rootObjects().first());
     trayIcon.setWindow(window);
-
-    restoreHardcodedAgents(config, activeAgents);
 
     const int exitCode = app.exec();
 

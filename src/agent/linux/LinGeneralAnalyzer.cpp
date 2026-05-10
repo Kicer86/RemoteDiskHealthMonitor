@@ -4,6 +4,7 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <sys/wait.h>
 
 #include "common/GeneralHealth.h"
 #include "LinGeneralAnalyzer.h"
@@ -12,12 +13,54 @@
 
 namespace
 {
+    struct CommandResult
+    {
+        std::string output;
+        bool success = false;
+    };
+
     std::string getCursorFilePath()
     {
         if (const char* runDir = std::getenv("XDG_RUNTIME_DIR"))
             return std::string(runDir) + "/rdhm-journal-cursor";
 
         return "/run/rdhm/journal-cursor";
+    }
+
+    std::string shellQuote(const std::string& value)
+    {
+        std::string quoted = "'";
+        for (char c : value)
+        {
+            if (c == '\'')
+                quoted += "'\\''";
+            else
+                quoted += c;
+        }
+        quoted += "'";
+        return quoted;
+    }
+
+    bool exitStatusOk(int status)
+    {
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    }
+
+    CommandResult runCommand(const std::string& cmd)
+    {
+        CommandResult result;
+        std::array<char, 4096> buffer;
+
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (pipe)
+        {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                result.output += buffer.data();
+
+            result.success = exitStatusOk(pclose(pipe));
+        }
+
+        return result;
     }
 }
 
@@ -26,13 +69,7 @@ namespace
 LinGeneralAnalyzer::LinGeneralAnalyzer(std::shared_ptr<IPartitionsManager> manager)
     : m_partitionsManager(manager)
 {
-    FILE* pipe = popen("which journalctl", "r");
-    if (pipe)
-    {
-        char buf[256];
-        m_useJournalctl = (fgets(buf, sizeof(buf), pipe) != nullptr);
-        pclose(pipe);
-    }
+    m_useJournalctl = runCommand("command -v journalctl 2>/dev/null").success;
 }
 
 
@@ -75,28 +112,25 @@ nlohmann::json LinGeneralAnalyzer::GetRawData(const Disk& disk) const
 
 void LinGeneralAnalyzer::Refresh(const std::vector<Disk>&)
 {
-    std::string output;
-    std::array<char, 4096> buffer;
-
     const auto cursorPath = getCursorFilePath();
-    const auto journalCmd = "journalctl -k --cursor-file=" + cursorPath +
-                            " --no-pager -q --output=short";
+    const auto journalCmd = "journalctl -k --cursor-file=" + shellQuote(cursorPath) +
+                            " --no-pager -q --output=short 2>/dev/null";
 
-    const char* cmd = m_useJournalctl
-        ? journalCmd.c_str()
-        : "dmesg";
-
-    FILE* pipe = popen(cmd, "r");
-    if (pipe)
-    {
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-            output += buffer.data();
-        pclose(pipe);
-    }
-
-    auto newErrors = DmesgParser::parse(output, *m_partitionsManager);
+    CommandResult commandResult;
+    bool usedJournalctl = false;
 
     if (m_useJournalctl)
+    {
+        commandResult = runCommand(journalCmd);
+        usedJournalctl = commandResult.success;
+    }
+
+    if (!usedJournalctl)
+        commandResult = runCommand("dmesg 2>/dev/null");
+
+    auto newErrors = DmesgParser::parse(commandResult.output, *m_partitionsManager);
+
+    if (usedJournalctl)
     {
         // journalctl with cursor-file returns only new entries since last read.
         // Errors are accumulated permanently — once a disk reports an error it stays BAD

@@ -8,114 +8,89 @@
 
 WMICommunication::~WMICommunication()
 {
-    m_initialLocatorToWMI->Release();
-    m_services->Release();
-    m_pEnumerator->Release();
-    CoUninitialize();
+    ReleaseComObjects();
+    if (m_comInitialized)
+        CoUninitialize();
 }
 
 bool WMICommunication::WMIInit(const WmiNamespace _namespace)
 {
-    try {
-        HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
+    ReleaseComObjects();
 
-        if (FAILED(hres))
-        {
-            throw std::exception("Failed to initialize COM library. Error code = 0x");
-        }
-
-        hres = CoInitializeSecurity(
-            NULL,
-            -1,                          // COM authentication
-            NULL,                        // Authentication services
-            NULL,                        // Reserved
-            RPC_C_AUTHN_LEVEL_PKT,       // Default authentication
-            RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation
-            NULL,                        // Authentication info
-            EOAC_NONE,                   // Additional capabilities
-            NULL                         // Reserved
-        );
-
-        if (FAILED(hres))
-        {
-            throw std::exception("Failed to initialize security. Error code = 0x");
-        }
-
-        hres = CoCreateInstance(
-            CLSID_WbemLocator,
-            0,
-            CLSCTX_INPROC_SERVER,
-            IID_IWbemLocator, (LPVOID*)&m_initialLocatorToWMI);
-
-        if (FAILED(hres))
-        {
-            throw std::exception("Failed to create IWbemLocator object. Err code = 0x");
-        }
-
-        _bstr_t wmiNamespace;
-        if (_namespace == Smart)
-        {
-            wmiNamespace = L"ROOT\\WMI";
-        }
-        else if (_namespace == Discs)
-        {
-            wmiNamespace = L"ROOT\\cimv2";
-        }
-
-        hres = m_initialLocatorToWMI->ConnectServer(
-            wmiNamespace,              // Object path of WMI namespace
-            NULL,                    // User name. NULL = current user
-            NULL,                    // User password. NULL = current
-            0,                       // Locale. NULL indicates current
-            NULL,                    // Security flags.
-            0,                       // Authority (for example, Kerberos)
-            0,                       // Context object
-            &m_services                // pointer to IWbemServices proxy
-        );
-
-        if (FAILED(hres))
-        {
-            throw std::exception("Could not connect. Error code = 0x");
-        }
-
-        hres = CoSetProxyBlanket(
-            m_services,                    // Indicates the proxy to set
-            RPC_C_AUTHN_WINNT,           // RPC_C_AUTHN_xxx
-            RPC_C_AUTHZ_NONE,            // RPC_C_AUTHZ_xxx
-            NULL,                        // Server principal name
-            RPC_C_AUTHN_LEVEL_CALL,      // RPC_C_AUTHN_LEVEL_xxx
-            RPC_C_IMP_LEVEL_IMPERSONATE, // RPC_C_IMP_LEVEL_xxx
-            NULL,                        // client identity
-            EOAC_NONE                    // proxy capabilities
-        );
-
-        if (FAILED(hres))
-        {
-            throw std::exception("Could not set proxy blanket. Error code = 0x");
-        }
-
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        CoUninitialize();
-        if (m_initialLocatorToWMI != NULL)
-        {
-            m_initialLocatorToWMI->Release();
-        }
-
-        if (m_services != NULL)
-        {
-            m_services->Release();
-        }
-
+    HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
+    if (FAILED(hres))
         return false;
-    }
+
+    m_comInitialized = true;
+
+    hres = CoInitializeSecurity(
+        NULL,
+        -1,                          // COM authentication
+        NULL,                        // Authentication services
+        NULL,                        // Reserved
+        RPC_C_AUTHN_LEVEL_PKT,       // Default authentication
+        RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation
+        NULL,                        // Authentication info
+        EOAC_NONE,                   // Additional capabilities
+        NULL                         // Reserved
+    );
+
+    if (FAILED(hres) && hres != RPC_E_TOO_LATE)
+        return false;
+
+    hres = CoCreateInstance(
+        CLSID_WbemLocator,
+        0,
+        CLSCTX_INPROC_SERVER,
+        IID_IWbemLocator, (LPVOID*)&m_initialLocatorToWMI);
+
+    if (FAILED(hres))
+        return false;
+
+    _bstr_t wmiNamespace;
+    if (_namespace == Smart)
+        wmiNamespace = L"ROOT\\WMI";
+    else if (_namespace == Discs)
+        wmiNamespace = L"ROOT\\cimv2";
+
+    hres = m_initialLocatorToWMI->ConnectServer(
+        wmiNamespace,              // Object path of WMI namespace
+        NULL,                    // User name. NULL = current user
+        NULL,                    // User password. NULL = current
+        0,                       // Locale. NULL indicates current
+        NULL,                    // Security flags.
+        0,                       // Authority (for example, Kerberos)
+        0,                       // Context object
+        &m_services                // pointer to IWbemServices proxy
+    );
+
+    if (FAILED(hres))
+        return false;
+
+    hres = CoSetProxyBlanket(
+        m_services,                    // Indicates the proxy to set
+        RPC_C_AUTHN_WINNT,           // RPC_C_AUTHN_xxx
+        RPC_C_AUTHZ_NONE,            // RPC_C_AUTHZ_xxx
+        NULL,                        // Server principal name
+        RPC_C_AUTHN_LEVEL_CALL,      // RPC_C_AUTHN_LEVEL_xxx
+        RPC_C_IMP_LEVEL_IMPERSONATE, // RPC_C_IMP_LEVEL_xxx
+        NULL,                        // client identity
+        EOAC_NONE                    // proxy capabilities
+    );
+
+    if (FAILED(hres))
+        return false;
+
+    return true;
 }
 
 bool WMICommunication::CollectSMARTDataViaWMI(const Disk& _disk)
 {
+    if (m_services == nullptr)
+        return false;
+
     try {
+        ReleaseEnumerator();
         HRESULT hres = m_services->ExecQuery(
             bstr_t("WQL"),
             bstr_t("SELECT * FROM MSStorageDriver_FailurePredictData"),
@@ -142,13 +117,21 @@ bool WMICommunication::CollectSMARTDataViaWMI(const Disk& _disk)
             }
 
             VARIANT vtInstanceName;
+            VariantInit(&vtInstanceName);
             hr = pclsObj->Get(L"InstanceName", 0, &vtInstanceName, 0, 0);
+            if (FAILED(hr) || vtInstanceName.vt != VT_BSTR)
+            {
+                VariantClear(&vtInstanceName);
+                pclsObj->Release();
+                continue;
+            }
 
             CMDCommunication communicator;
             std::wstring instanceName = (vtInstanceName.bstrVal);
             if ( communicator.CompareDeviceIdWithInstanceName( _disk, std::string( instanceName.begin(), instanceName.end() ) ) )
             {
                 VARIANT vtProp;
+                VariantInit(&vtProp);
                 hr = pclsObj->Get(L"VendorSpecific", 0, &vtProp, 0, 0);
 
                 if (V_ISARRAY(&vtProp))
@@ -207,25 +190,17 @@ bool WMICommunication::CollectSMARTDataViaWMI(const Disk& _disk)
     }
     catch (const std::exception& e)
     {
-        if (m_services != NULL)
-        {
-            m_services->Release();
-        }
-
-        if (m_initialLocatorToWMI != NULL)
-        {
-            m_initialLocatorToWMI->Release();
-        }
-
-        CoUninitialize();
-
         return false;
     }
 }
 
 bool WMICommunication::CollectInfoAboutDiscsViaWMI()
 {
+    if (m_services == nullptr)
+        return false;
+
     try {
+        ReleaseEnumerator();
         HRESULT hres = m_services->ExecQuery(
             bstr_t("WQL"),
             bstr_t("SELECT * FROM Win32_DiskDrive"),
@@ -252,16 +227,30 @@ bool WMICommunication::CollectInfoAboutDiscsViaWMI()
             }
 
             VARIANT vtPropDeviceId;
+            VariantInit(&vtPropDeviceId);
             hr = pclsObj->Get(L"DeviceID", 0, &vtPropDeviceId, 0, 0);
 
             VARIANT vtPropModel;
+            VariantInit(&vtPropModel);
             hr = pclsObj->Get(L"Model", 0, &vtPropModel, 0, 0);
 
             VARIANT vtPropSize;
+            VariantInit(&vtPropSize);
             hr = pclsObj->Get(L"Size", 0, &vtPropSize, 0, 0);
 
             VARIANT vtPropInterfaceType;
+            VariantInit(&vtPropInterfaceType);
             hr = pclsObj->Get(L"InterfaceType", 0, &vtPropInterfaceType, 0, 0);
+
+            if (vtPropDeviceId.vt != VT_BSTR)
+            {
+                VariantClear(&vtPropInterfaceType);
+                VariantClear(&vtPropSize);
+                VariantClear(&vtPropModel);
+                VariantClear(&vtPropDeviceId);
+                pclsObj->Release();
+                continue;
+            }
 
             std::string model;
             if (vtPropModel.vt == VT_BSTR)
@@ -293,18 +282,6 @@ bool WMICommunication::CollectInfoAboutDiscsViaWMI()
     }
     catch (const std::exception& e)
     {
-        if (m_services != NULL)
-        {
-            m_services->Release();
-        }
-
-        if (m_initialLocatorToWMI != NULL)
-        {
-            m_initialLocatorToWMI->Release();
-        }
-
-        CoUninitialize();
-
         return false;
     }
 }
@@ -347,7 +324,11 @@ void WMICommunication::FeedSmartDataStructure(const std::vector<BYTE>& _data, co
 
 bool WMICommunication::CollectThresholdsViaWMI(const Disk& _disk)
 {
+    if (m_services == nullptr)
+        return false;
+
     try {
+        ReleaseEnumerator();
         HRESULT hres = m_services->ExecQuery(
             bstr_t("WQL"),
             bstr_t("SELECT * FROM MSStorageDriver_FailurePredictThresholds"),
@@ -370,13 +351,21 @@ bool WMICommunication::CollectThresholdsViaWMI(const Disk& _disk)
                 break;
 
             VARIANT vtInstanceName;
+            VariantInit(&vtInstanceName);
             hr = pclsObj->Get(L"InstanceName", 0, &vtInstanceName, 0, 0);
+            if (FAILED(hr) || vtInstanceName.vt != VT_BSTR)
+            {
+                VariantClear(&vtInstanceName);
+                pclsObj->Release();
+                continue;
+            }
 
             CMDCommunication communicator;
             std::wstring instanceName = (vtInstanceName.bstrVal);
             if (communicator.CompareDeviceIdWithInstanceName(_disk, std::string(instanceName.begin(), instanceName.end())))
             {
                 VARIANT vtProp;
+                VariantInit(&vtProp);
                 hr = pclsObj->Get(L"VendorSpecific", 0, &vtProp, 0, 0);
 
                 if (V_ISARRAY(&vtProp))
@@ -438,6 +427,32 @@ void WMICommunication::FeedThresholds(const std::vector<BYTE>& _data, const LONG
     {
         if (auto it = thresholds.find(attr.id); it != thresholds.end())
             attr.threshold = it->second;
+    }
+}
+
+void WMICommunication::ReleaseEnumerator()
+{
+    if (m_pEnumerator != nullptr)
+    {
+        m_pEnumerator->Release();
+        m_pEnumerator = nullptr;
+    }
+}
+
+void WMICommunication::ReleaseComObjects()
+{
+    ReleaseEnumerator();
+
+    if (m_services != nullptr)
+    {
+        m_services->Release();
+        m_services = nullptr;
+    }
+
+    if (m_initialLocatorToWMI != nullptr)
+    {
+        m_initialLocatorToWMI->Release();
+        m_initialLocatorToWMI = nullptr;
     }
 }
 

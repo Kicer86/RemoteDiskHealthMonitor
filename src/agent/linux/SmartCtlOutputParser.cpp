@@ -282,9 +282,7 @@ namespace SmartCtlOutputParser
             return parseNvmeHealth(cleanLines);
 
         const auto attributeLines = smartAttributes(cleanLines);
-        const auto table = parseRawTable(attributeLines);
-
-        return table;
+        return parseRawTable(attributeLines);
     }
 
     SmartTestStatus parseTestStatus(const std::string& smartCtlOutput)

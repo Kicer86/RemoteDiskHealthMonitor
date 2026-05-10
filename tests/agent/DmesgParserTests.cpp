@@ -35,7 +35,7 @@ TEST(DmesgParserTest, NoErrors)
 
 TEST(DmesgParserTest, BufferIOError)
 {
-    IPartitionsManagerMock pm;
+    NiceMock<IPartitionsManagerMock> pm;
     ON_CALL(pm, isPartition(std::string("sdb1"))).WillByDefault(Return(true));
     ON_CALL(pm, diskForPartition(std::string("sdb1"))).WillByDefault(Return("sdb"));
 
@@ -59,4 +59,46 @@ TEST(DmesgParserTest, BufferIOError)
 
     ASSERT_EQ(errors.size(), 1);
     ASSERT_NE(errors.find(failedDisk), errors.end());
+}
+
+
+TEST(DmesgParserTest, MapsCommonKernelIoErrorsToPhysicalDisk)
+{
+    NiceMock<IPartitionsManagerMock> pm;
+    ON_CALL(pm, isPartition(std::string("nvme0n1p1"))).WillByDefault(Return(true));
+    ON_CALL(pm, diskForPartition(std::string("nvme0n1p1"))).WillByDefault(Return("nvme0n1"));
+    ON_CALL(pm, isPartition(std::string("sdb1"))).WillByDefault(Return(true));
+    ON_CALL(pm, diskForPartition(std::string("sdb1"))).WillByDefault(Return("sdb"));
+
+    const auto errors = DmesgParser::parse(
+    R"(
+        [  100.123456] blk_update_request: I/O error, dev nvme0n1p1, sector 123456 op 0x0:(READ)
+        [  101.123456] blk_update_request: critical medium error, dev sda, sector 999 op 0x0:(READ)
+        [  102.123456] EXT4-fs error (device sdb1): ext4_find_entry:1456: inode #2: comm systemd: reading directory lblock 0
+    )",
+    pm
+    );
+
+    ASSERT_EQ(errors.size(), 3);
+    EXPECT_NE(errors.find(Disk("nvme0n1")), errors.end());
+    EXPECT_NE(errors.find(Disk("sda")), errors.end());
+    EXPECT_NE(errors.find(Disk("sdb")), errors.end());
+}
+
+
+TEST(DmesgParserTest, KeepsOriginalDeviceWhenPartitionMappingIsMissing)
+{
+    NiceMock<IPartitionsManagerMock> pm;
+    ON_CALL(pm, isPartition(std::string("dm-0"))).WillByDefault(Return(true));
+    ON_CALL(pm, diskForPartition(std::string("dm-0"))).WillByDefault(Return(""));
+
+    const auto errors = DmesgParser::parse(
+    R"(
+        [  100.123456] Buffer I/O error on dev dm-0, logical block 12345
+    )",
+    pm
+    );
+
+    ASSERT_EQ(errors.size(), 1);
+    EXPECT_NE(errors.find(Disk("dm-0")), errors.end());
 }

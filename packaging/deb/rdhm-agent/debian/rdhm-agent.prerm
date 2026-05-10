@@ -1,7 +1,13 @@
 #!/bin/sh
 set -e
 
+run_systemctl() {
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl "$@" || true
+    fi
+}
+
 if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
-    systemctl stop rdhm-agent.service || true
-    systemctl disable rdhm-agent.service || true
+    run_systemctl stop rdhm-agent.service
+    run_systemctl disable rdhm-agent.service
 fi

@@ -33,7 +33,12 @@ TrayIcon::TrayIcon(AgentsList& agents, QObject* parent)
         }
     });
 
-    connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
+    connect(quitAction, &QAction::triggered, this, [this]() {
+        if (m_window)
+            m_window->setProperty("quitRequested", true);
+
+        qApp->quit();
+    });
 
     m_trayIcon.setContextMenu(m_menu.get());
     m_trayIcon.setToolTip(tr("Remote Disc Health Monitor"));
