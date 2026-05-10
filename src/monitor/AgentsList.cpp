@@ -28,7 +28,6 @@ void AgentsList::addAgent(const AgentInformation& info)
 {
     auto it = std::find(m_agents.begin(), m_agents.end(), info);
 
-    // we do not need duplicates
     if (it == m_agents.end())
     {
         const int row = rowCount({});
@@ -38,6 +37,15 @@ void AgentsList::addAgent(const AgentInformation& info)
         endInsertRows();
 
         m_statusProvider.observe(info);
+    }
+    else if (info.detectionSource() == AgentInformation::DetectionSource::Hardcoded &&
+             it->detectionSource() == AgentInformation::DetectionSource::ZeroConf)
+    {
+        const int pos = static_cast<int>(std::distance(m_agents.begin(), it));
+        m_agents[pos] = info;
+
+        const QModelIndex idx = index(pos, 0);
+        emit dataChanged(idx, idx, {AgentDetectionTypeRole});
     }
 }
 
