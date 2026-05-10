@@ -17,14 +17,15 @@ namespace
     std::string physicalDeviceFor(const std::string& deviceName,
                                   const IPartitionsManager& partitionsManager)
     {
-        if (!partitionsManager.isPartition(deviceName))
+        if (partitionsManager.isPartition(deviceName))
+        {
+            const auto physicalDevice = partitionsManager.diskForPartition(deviceName);
+            return physicalDevice.empty() ? deviceName : physicalDevice;
+        }
+        else
             return deviceName;
-
-        const auto physicalDevice = partitionsManager.diskForPartition(deviceName);
-        return physicalDevice.empty() ? deviceName : physicalDevice;
     }
 }
-
 
 
 std::map<Disk, std::set<std::string>> DmesgParser::parse(const std::string& output, const IPartitionsManager& paritionsManager)

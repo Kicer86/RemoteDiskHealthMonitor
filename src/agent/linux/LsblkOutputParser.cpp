@@ -25,8 +25,10 @@ namespace
         std::vector<std::string> parts;
         std::istringstream stream(str);
         std::string part;
+
         while (stream >> part)
             parts.push_back(part);
+
         return parts;
     }
 
@@ -35,8 +37,10 @@ namespace
         std::vector<std::string> parts;
         std::istringstream stream(str);
         std::string part;
+
         while (std::getline(stream, part, delim))
             parts.push_back(part);
+
         return parts;
     }
 
@@ -69,8 +73,7 @@ namespace
     bool isPartitionOfDisk(const std::string& partitionName,
                            const std::string& diskName)
     {
-        if (partitionName.size() <= diskName.size() ||
-            partitionName.find(diskName) != 0)
+        if (partitionName.size() <= diskName.size() || partitionName.find(diskName) != 0)
             return false;
 
         const auto suffix = partitionName.substr(diskName.size());

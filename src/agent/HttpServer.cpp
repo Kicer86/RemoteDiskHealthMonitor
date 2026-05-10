@@ -24,8 +24,7 @@ namespace
     {
         return !name.empty() && name.size() <= 128 &&
                std::ranges::all_of(name, [](char c) {
-                   return std::isalnum(static_cast<unsigned char>(c)) ||
-                          c == '-' || c == '_' || c == '.' || c == '\\' || c == ':';
+                   return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.' || c == '\\' || c == ':';
                });
     }
 }

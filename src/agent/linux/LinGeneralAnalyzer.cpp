@@ -52,13 +52,14 @@ namespace
         std::array<char, 4096> buffer;
 
         FILE* pipe = popen(cmd.c_str(), "r");
-        if (!pipe)
-            return result;
+        if (pipe)
+        {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+                result.output += buffer.data();
 
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-            result.output += buffer.data();
+            result.success = exitStatusOk(pclose(pipe));
+        }
 
-        result.success = exitStatusOk(pclose(pipe));
         return result;
     }
 }
