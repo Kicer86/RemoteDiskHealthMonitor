@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     engine.rootContext()->setContextProperty("agentsModel", &activeAgents);
     engine.rootContext()->setContextProperty("agentsValidator", &manualAgentsValidator);
 
+    engine.addImportPath(QStringLiteral(":/"));
     engine.loadFromModule("RDHM.Monitor", "Main");
 
     if (engine.rootObjects().isEmpty())
