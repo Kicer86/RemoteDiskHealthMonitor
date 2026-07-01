@@ -15,7 +15,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 OUTPUT_DIR="${1:-$PROJECT_ROOT}"
 
 BUILD_DIR=$(mktemp -d)
-PKG_DIR="$BUILD_DIR/rdhm-monitor-0.2.0"
+PKG_DIR="$BUILD_DIR/rdhm-monitor-0.2.1"
 
 trap 'rm -rf "$BUILD_DIR"' EXIT
 

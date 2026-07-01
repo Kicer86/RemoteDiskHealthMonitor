@@ -15,7 +15,7 @@ OUTPUT_DIR="${1:-$PROJECT_ROOT}"
 
 # Create a temporary build directory with the expected source tree
 BUILD_DIR=$(mktemp -d)
-PKG_DIR="$BUILD_DIR/rdhm-agent-0.2.0"
+PKG_DIR="$BUILD_DIR/rdhm-agent-0.2.1"
 
 trap 'rm -rf "$BUILD_DIR"' EXIT
 

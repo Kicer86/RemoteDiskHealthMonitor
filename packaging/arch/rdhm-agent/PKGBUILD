@@ -1,7 +1,7 @@
 # Maintainer: Wojciech Kucjas <wojciech.kucjas@gmail.com>
 # Maintainer: Michał Walenciak <michalwalenciak@gmail.com>
 pkgname=rdhm-agent
-pkgver=0.2.0
+pkgver=0.2.1
 pkgrel=1
 pkgdesc='Remote Disc Health Monitor - Agent daemon'
 arch=('x86_64')

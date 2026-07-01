@@ -1,5 +1,5 @@
 Name:           rdhm-monitor
-Version:        0.2.0
+Version:        0.2.1
 Release:        1%{?dist}
 Summary:        Remote Disc Health Monitor - Monitor GUI
 License:        GPL-3.0-or-later
@@ -40,5 +40,7 @@ network via mDNS/ZeroConf and displays disk health status in real time.
 %{_libdir}/libQtZeroConf.so*
 
 %changelog
+* Wed Jul 01 2026 Michał Walenciak <michalwalenciak@gmail.com> - 0.2.1-1
+- Release version 0.2.1
 * Sat Mar 14 2026 Michał Walenciak <michalwalenciak@gmail.com> - 0.2.0-1
 - Initial packaging
