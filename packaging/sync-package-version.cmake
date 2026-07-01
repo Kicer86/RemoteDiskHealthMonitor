@@ -27,11 +27,12 @@ else()
     set(SYNC_VERIFY_ONLY FALSE)
 endif()
 
-set(SYNC_MISMATCHES "")
+set_property(GLOBAL PROPERTY RDHM_SYNC_MISMATCHES "")
 
 function(_record_mismatch path)
-    list(APPEND SYNC_MISMATCHES "${path}")
-    set(SYNC_MISMATCHES "${SYNC_MISMATCHES}" PARENT_SCOPE)
+    get_property(sync_mismatches GLOBAL PROPERTY RDHM_SYNC_MISMATCHES)
+    list(APPEND sync_mismatches "${path}")
+    set_property(GLOBAL PROPERTY RDHM_SYNC_MISMATCHES "${sync_mismatches}")
 endfunction()
 
 function(_write_if_changed path content)
@@ -181,7 +182,10 @@ _sync_debian_changelog("rdhm-monitor")
 _sync_rpm_changelog("rdhm-agent" "Michał Walenciak <michalwalenciak@gmail.com>")
 _sync_rpm_changelog("rdhm-monitor" "Michał Walenciak <michalwalenciak@gmail.com>")
 
+get_property(SYNC_MISMATCHES GLOBAL PROPERTY RDHM_SYNC_MISMATCHES)
+
 if(SYNC_MISMATCHES)
+    list(REMOVE_DUPLICATES SYNC_MISMATCHES)
     list(JOIN SYNC_MISMATCHES "\n  " mismatch_text)
     message(FATAL_ERROR "Package metadata is out of sync with project version ${PROJECT_PACKAGE_VERSION}:\n  ${mismatch_text}\nRun: cmake -P packaging/sync-package-version.cmake")
 endif()
